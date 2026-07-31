@@ -1,0 +1,8 @@
+# Obsidian personal state (shared config like app.json IS committed)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/graph.json
+.obsidian/cache/
+
+# OS
+.DS_Store
