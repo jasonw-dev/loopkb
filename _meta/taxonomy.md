@@ -25,6 +25,11 @@ If none of these fit confidently, the item stays in `_inbox/` with a note explai
 `domains:` may ONLY use values from this list. Adding a value requires a
 rule-change MR (see `_meta/loop.md`, reflect stage).
 
+`domains: []` is legal on `raw` notes (triage may not know the domain yet); the
+refine stage fills it. A note cannot be promoted to `curated` with empty domains.
+In this template the list below is intentionally empty — an instance MUST fill it
+before its first triage run.
+
 <!-- INSTANCE: fill in. Example for a mobile team:
 - `flutter`
 - `android`
@@ -44,6 +49,12 @@ actual repo names (verifiable), not free text.
 - Filenames: English, kebab-case, descriptive, unique across the entire vault.
   Good: `flutter-ios-codesign-fastlane.md`. Bad: `note1.md`, `iOS問題.md`.
 - A rename counts as a destructive operation (breaks inbound links until updated) → MR channel.
+
+## Source field
+
+`source:` records how the content entered the vault: `inbox` (filed from `_inbox/`),
+`conversation` (captured via kb-save), `meeting` (the origin material is a meeting
+record — regardless of whether it arrived via inbox or kb-save).
 
 ## Status lifecycle
 

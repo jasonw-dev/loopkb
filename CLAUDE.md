@@ -37,11 +37,21 @@ status: raw                      # raw -> curated -> evergreen (see loop.md)
 | Operation | Channel |
 |---|---|
 | Add note, add links/tags, formatting fix, status promotion | Commit directly to `main` |
-| Merge notes, delete, move across folders, rewrite existing content, change `_meta/` rules | Branch + merge request |
+| Status demotion (e.g. evergreen → curated; reason required in commit message) | Commit directly to `main` |
+| Merge notes, delete, rename, move across folders, rewrite existing content, change `_meta/` rules | Branch + merge request |
+
+"Move across folders" means moving an already-filed note between type folders.
+Filing an item OUT of `_inbox/` is triage, which is additive → direct commit.
+
+**MR fallback**: in a solo vault or a repo without an MR/PR platform, the MR channel
+degrades to: commit on a branch `kb-loop/<topic>`, have the human review the diff
+locally (`git diff main...`), then merge. The review step never disappears.
 
 ## Commit conventions
 
-- Agent commits MUST be prefixed: `[kb-save]` or `[kb-loop]`.
+- Agent commits MUST be prefixed: `[kb-save]` for new knowledge captured from a
+  conversation; `[kb-loop]` for any maintenance action (triage, refine, reflect, lint) —
+  including ad-hoc ones performed outside a full loop run.
   This is how the reflect stage separates human corrections from agent actions in git history.
 - Human commits have no prefix.
 

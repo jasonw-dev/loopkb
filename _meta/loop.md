@@ -35,7 +35,7 @@ Channel: direct commit for links/tags/format/status; MR for merge/distill/move.
 
 ## Stage 3 — Reflect (learn from human corrections)
 
-1. `git log` since the last `[kb-loop]` commit.
+1. `git log` since the last `[kb-loop]` commit (first run ever: scan the full history).
 2. Find human commits (no prefix) that override agent actions: moved files, changed
    types/tags, renamed files, reverted agent commits.
 3. If a pattern emerges (same kind of correction ≥ 2 times), draft a change to
