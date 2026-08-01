@@ -29,6 +29,11 @@ If none of these fit confidently, the item stays in `_inbox/` with a note explai
   copy of the truth itself (copies rot). This includes unfixed traps inside a single
   repo: document them in that repo (or fix the root cause), not here.
 - **Machine-local setup** — personal tooling choices not adopted by the team.
+- **Agent-imported content** — anything an agent brings in on its own initiative
+  (from its memory, prior conversations, or test fixtures) with no human contributor
+  standing behind it. Knowledge enters the vault only when a person deliberately
+  contributes it (inbox drop or kb-save). Test data used to exercise the loop must be
+  removed when the test ends.
 - During triage, reject such items: leave them in `_inbox/` with a note pointing to
   where the content should go instead.
 
