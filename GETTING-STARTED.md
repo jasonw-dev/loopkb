@@ -29,15 +29,50 @@ Open the vault in Claude Code and say **"run kb-loop"**. The agent will:
 1. **Triage** — classify and file everything in `_inbox/`.
 2. **Refine** — improve a batch of notes: add links, fix formatting, re-check the
    oldest notes for staleness, propose merges.
-3. **Reflect** — learn from your corrections (including the proposals you rejected)
-   and propose classification-rule changes.
+3. **Reflect** — learn from your corrections (including the actions you rejected)
+   and change the classification rules accordingly.
 4. **Lint** — run `python3 scripts/lint.py` and fix what it reports.
 
-Then review what it reports: merge requests need your approval; items stuck in the
-inbox need one sentence of added context.
+Every run writes its report to **`_meta/digest.md`** — that file is your whole
+interface to the loop. See "Reviewing the loop's work" below.
 
 Only one loop run happens at a time — the run takes a lease (`scripts/lease.py`) on a
 `kb-loop-lock` branch, so a second run started elsewhere stops instead of colliding.
+
+## Reviewing the loop's work
+
+The vault runs in one of two **governance modes**, set in `_meta/instance.md` →
+Governance. It decides *when* you look at the agent's work, not how much you have to.
+
+### `autonomous` — the default: review after the fact
+
+The agent does everything by committing straight to `main`: filing, linking, merging
+duplicates, deleting, renaming, even changing the classification rules. In exchange it
+must itemize every risky action in the digest.
+
+Your weekly duty, about two minutes:
+
+1. Open `_meta/digest.md` in Obsidian. Read the header and the **Risky actions**
+   section at the top — it lists every merge, deletion, rename, demotion and rule
+   change, each with its commit SHA.
+2. Disagree with one? `git revert <sha>`. That is the whole rejection mechanism —
+   no approvals, no queue, nothing waiting on you.
+3. Glance at **Stuck** (inbox items needing one sentence of context) and
+   **Nominations** (notes the agent thinks deserve `evergreen`). Promote a nominated
+   note by editing its `status:` and committing; ignore it and the nomination lapses.
+
+A revert is a strong signal, not just an undo: the next run reads it, records the
+action as rejected, and will not re-attempt it unless the notes involved really change.
+
+### `reviewed` — approve before anything lands
+
+Destructive actions and rule changes arrive as merge requests instead. The digest
+lists the open MRs; you approve or close them. Closing one without merging is the
+rejection signal, exactly as a revert is in `autonomous` mode. Additive work (filing,
+links, tags, `raw → curated`) still commits directly in this mode too.
+
+Pick `reviewed` when you do not yet trust the agent with your vault, and switch to
+`autonomous` once you find yourself approving everything unread.
 
 ## Concepts in plain words
 
@@ -48,15 +83,18 @@ gets *better* over time because an agent keeps re-organizing, connecting, and di
 **Status lifecycle** (`raw → curated → evergreen`): every note carries a quality label.
 `raw` = just filed. `curated` = linked and cleaned, promoted by the agent once it meets
 a mechanical floor. `evergreen` = distilled and trustworthy long-term — **only a human
-grants it**; the agent can nominate a note via merge request but never promote it
-itself. That is exactly why readers can trust `evergreen` more.
+grants it, in either governance mode**; the agent can nominate a note (a digest line, or
+a merge request) but never promote it itself. That is exactly why readers can trust
+`evergreen` more.
 
 **Why do corrections matter?** When the agent files something wrong, just move/fix it
 yourself and commit (no special commit message needed — and don't bother updating the
-note's frontmatter; the loop's lint stage reconciles it). Closing an agent's merge
-request without merging counts too. The loop's reflect stage reads git history and the
-platform, notices your correction, and proposes a rule change so the same mistake stops
-happening. Your corrections ARE the training signal.
+note's frontmatter; the loop's lint stage reconciles it). Reverting an agent commit
+counts too, as does closing an agent's merge request without merging. The loop's
+reflect stage reads git history (and, in `reviewed` mode, the MR platform), notices your
+correction, and changes the rules so the same mistake stops happening. Your corrections
+ARE the training signal — and in `autonomous` mode, `git revert` is the *only* control
+you need, which is why it must stay meaningful: revert what is actually wrong.
 
 ## Starting a new instance from this template
 
@@ -67,17 +105,24 @@ Work through this checklist — the instance is ready when every box is checked:
       tag vocabulary, and any policy overrides. This is the **only** file you fill in —
       every other file is framework-owned, which is what keeps template updates
       mergeable (see "Updating an instance" below).
+- [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
+      `autonomous` (agent commits everything, you review `_meta/digest.md` and revert).
+      Switch to `reviewed` if destructive actions should wait for your approval — see
+      "Reviewing the loop's work" above.
 - [ ] The domain vocabulary must be non-empty: it is the machine-checkable definition
       of "setup complete". While it is empty, `kb-loop` refuses to run and agents may
-      still edit `_meta/` directly; once it is filled, agents may only change `_meta/`
-      through merge requests.
+      still edit `_meta/` directly and unreported; once it is filled, `_meta/` changes
+      are either itemized in the digest (`autonomous`) or gated by a merge request
+      (`reviewed`).
 - [ ] Add/remove type folders if the domain calls for it (e.g. a personal vault may
       add `journal/`) — add the matching `_meta/templates/<type>.md`, since the linter
       derives the type-folder set from the templates.
 - [ ] Run `python3 scripts/lint.py` — it must exit 0 on the fresh instance.
 - [ ] Ensure `main` allows direct pushes by members and agents (no branch protection
-      blocking them) — the additive write tier depends on it. If your platform
-      enforces protection, route ALL writes through MRs via an instance policy override.
+      blocking them) — every write tier in `autonomous` mode and the additive tier in
+      `reviewed` mode depend on it. If your platform enforces branch protection, you
+      cannot run `autonomous`: use `reviewed`, and route ALL writes through MRs via an
+      instance policy override.
 - [ ] Rewrite the README for your instance (the template README describes the framework).
 - [ ] Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
 - [ ] Open the vault in Obsidian once to confirm it reads well.
@@ -115,12 +160,17 @@ into `_meta/instance.md` as a policy override instead.
 
 1. **丟東西進 `_inbox/`**——隨手筆記、連結、逐字稿，不用整理格式，分類是 agent 的事。丟完記得 commit + push，不然別台機器跑 loop 看不到。
 2. **對話中說 kb-save**——剛跟 AI 解完一個問題，順口一句「存進知識庫」，agent 會萃取、格式化、分類、commit。
-3. **每週跑一次 kb-loop**——agent 會清空 inbox、精煉筆記、從你的修正中學習、跑 lint。跑完看報告：MR 要你批准、卡在 inbox 的東西補一句說明即可。
+3. **每週跑一次 kb-loop**——agent 會清空 inbox、精煉筆記、從你的修正中學習、跑 lint。跑完打開 `_meta/digest.md` 看報告。
+
+**兩種治理模式**（在 `_meta/instance.md` → Governance 選）：
+
+- `autonomous`（預設，**事後審查**）：agent 全部直接 commit 到 `main`，包含合併、刪除、改名、改規則；但每一個高風險動作都必須列在 digest 最上面的 Risky actions 區、附 commit SHA。你每週花兩分鐘讀 digest，不同意就 `git revert <sha>`。**沒有任何事情卡在你身上**。
+- `reviewed`（**事前審查**）：破壞性動作與規則變更走 MR，等你批准才會進 `main`；關掉不合併就是拒絕訊號。還不信任 agent 時用這個。
 
 **為什麼要 loop**：只寫不理的知識庫半年就變垃圾場。loop 讓它隨時間變好——agent 持續重整、連結、蒸餾。
 
-**status 生命週期**：`raw`（剛歸檔）→ `curated`（整理過，agent 可自行升級）→ `evergreen`（可長期信賴，**只有人類能授予**；agent 只能開 MR 提名）。讀的人優先信任高 status。
+**status 生命週期**：`raw`（剛歸檔）→ `curated`（整理過，agent 可自行升級）→ `evergreen`（可長期信賴，**兩種模式下都只有人類能授予**；agent 只能提名——`autonomous` 寫在 digest 一行，`reviewed` 開 MR。你不理它，提名就自動失效，不會累積待辦）。讀的人優先信任高 status。
 
-**你的修正就是訓練訊號**：agent 分錯了，直接自己搬正、commit 即可（不用特殊格式）；把 agent 開的 MR 關掉不合併也算一種修正訊號。loop 的反省階段會從 git 歷史與平台看到這些修正，提議改分類規則，讓同樣的錯不再發生。
+**你的修正就是訓練訊號**：agent 分錯了，直接自己搬正、commit 即可（不用特殊格式）；`git revert` 掉 agent 的 commit（`autonomous`）或把 agent 開的 MR 關掉不合併（`reviewed`）同樣算修正訊號。loop 的反省階段會從 git 歷史看到這些修正，改掉分類規則，讓同樣的錯不再發生——同一個被 revert 的動作，除非相關筆記真的變了，否則不會再做一次。
 
-**開新實例**：只需要填 `_meta/instance.md` 一個檔案（語言、範圍、領域標籤字彙、政策覆寫）；其餘都是框架檔案，所以之後 `git merge upstream/main` 拉模板更新不會衝突。
+**開新實例**：只需要填 `_meta/instance.md` 一個檔案（語言、範圍、治理模式、領域標籤字彙、政策覆寫）；其餘都是框架檔案，所以之後 `git merge upstream/main` 拉模板更新不會衝突。

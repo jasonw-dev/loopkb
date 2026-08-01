@@ -17,8 +17,8 @@ appends to:
   lint) that keeps improving the vault: linking, merging, distilling, re-checking
   old notes for staleness.
 - **Rule evolution** — when humans correct the agent's filing — by fixing it directly,
-  or by closing the agent's merge request — the reflect stage mines those corrections
-  and proposes rule changes via merge request. The taxonomy learns.
+  by reverting its commit, or by closing its merge request — the reflect stage mines
+  those corrections and changes the classification rules. The taxonomy learns.
 - **Executable schema** — `scripts/lint.py` (stdlib-only Python 3) is the definition
   of what a valid note is, so "is the vault healthy?" has a deterministic answer.
 
@@ -35,11 +35,14 @@ appends to:
   `_meta/instance.md` — so an instance can pull template updates with a plain
   `git merge upstream/main` and never hit a conflict in its own configuration.
   Scale by adding vaults, not by deepening one.
-- **Write tiers.** For agents, additive operations commit straight to main;
-  destructive ones (merge, delete, move, rule changes) go through MRs a human
-  reviews. `evergreen` status is human-conferred — agents may nominate, never
-  promote. Humans always commit freely — their unprefixed commits are the
-  correction signal the taxonomy learns from.
+- **Governance: post-hoc revert or pre-approval, per instance.** In the default
+  `autonomous` mode agents commit everything to main — merges, deletions, rule changes
+  included — and must itemize each risky action in `_meta/digest.md`; the human spends
+  two minutes a week reading it and `git revert`s what they disagree with, so nothing
+  ever blocks on them and no MR platform is involved. `reviewed` mode is the opt-in
+  alternative: destructive actions wait in merge requests. Either way `evergreen` is
+  human-conferred (agents nominate, never promote), reverts and closed MRs are read as
+  the same rejection signal, and humans always commit freely.
 
 ## What it looks like
 
@@ -117,8 +120,13 @@ loopkb 是給 AI Agent 用的知識庫框架：Obsidian 相容、git 原生、�
 
 核心差異在 **loop engineering**——知識庫不是「寫入就結束」：agent 定期跑四階段維護迴圈
 （歸檔 → 精煉 → 反省 → 健檢），持續補連結、合併重複、蒸餾筆記、重新檢查老筆記是否過期；
-而人類對 agent 分類的修正（直接改掉，或把 agent 開的 MR 關掉不合併）會被反省階段挖出來，
-變成分類規則的修改提案（走 MR）——規則會學習。
+而人類對 agent 的修正（直接改掉、`git revert` 掉、或把 agent 開的 MR 關掉不合併）會被
+反省階段挖出來，變成分類規則的修改——規則會學習。
+
+**治理模式**：預設 `autonomous`——agent 全部直接 commit 到 main，但每個高風險動作都要列進
+`_meta/digest.md`；人類每週讀兩分鐘、不同意就 `git revert`，整條 loop 不卡在人身上，也不需要
+任何 MR 平台。想要事前審查就改成 `reviewed`，破壞性動作改走 MR。`evergreen` 兩種模式下都只有
+人類能授予。
 
 結構上：型態用資料夾、領域用封閉 tag 字彙；框架（本 template）與實例（各團隊/個人 vault）
 分離，實例設定全部集中在 `_meta/instance.md` 一個檔案，所以拉模板更新只要 `git merge upstream/main`
