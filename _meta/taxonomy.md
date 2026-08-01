@@ -1,9 +1,8 @@
 # Taxonomy
 
-<!-- INSTANCE HEADER — fill in when instantiating:
-Note body language: <e.g. Traditional Chinese (Taiwan), technical terms kept in English>
-Vault scope: <e.g. mobile team engineering knowledge>
--->
+Framework rules. Nothing in this file is instance-specific — the domain tag
+vocabulary, the note body language, and any policy overrides live in
+`_meta/instance.md`.
 
 ## Types (folders)
 
@@ -20,6 +19,10 @@ A note has exactly ONE type. The type decides the folder and the template
 
 If none of these fit confidently, the item stays in `_inbox/` with a note explaining why.
 
+The set of type folders is whatever `_meta/templates/` defines — `scripts/lint.py`
+derives it from there, so an instance that adds a type folder adds its template too
+(and records it under "Extra type folders" in `_meta/instance.md`).
+
 ## What does NOT belong in this vault
 
 - **Repo-local facts** — anything a single repo's own files or docs define (versions,
@@ -34,27 +37,18 @@ If none of these fit confidently, the item stays in `_inbox/` with a note explai
   standing behind it. Knowledge enters the vault only when a person deliberately
   contributes it (inbox drop or kb-save). Test data used to exercise the loop must be
   removed when the test ends.
+- **Out of scope** — anything outside the vault scope declared in `_meta/instance.md`.
 - During triage, reject such items: leave them in `_inbox/` with a note pointing to
   where the content should go instead.
 
 ## Domain tags (closed vocabulary)
 
-`domains:` may ONLY use values from this list. Adding a value requires a
-rule-change MR (see `_meta/loop.md`, reflect stage).
+`domains:` may ONLY use values listed in `_meta/instance.md` → "Domain tag
+vocabulary". Adding a value requires a rule-change MR (see `_meta/loop.md`, reflect
+stage) proposed against `_meta/instance.md`, since the vocabulary is instance-owned.
 
 `domains: []` is legal on `raw` notes (triage may not know the domain yet); the
 refine stage fills it. A note cannot be promoted to `curated` with empty domains.
-In this template the list below is intentionally empty — an instance MUST fill it
-before its first triage run.
-
-<!-- INSTANCE: fill in. Example for a mobile team:
-- `flutter`
-- `android`
-- `ios`
-- `cross-platform`
-- `ci-cd`
-- `tooling`
--->
 
 ## Project tags
 
@@ -64,10 +58,15 @@ actual repo names (verifiable), not free text.
 ## Naming rules
 
 - Filenames: English, kebab-case, descriptive, unique across the entire vault.
-  Good: `flutter-ios-codesign-fastlane.md`. Bad: `note1.md`, `iOS問題.md`.
+  Good: `release-build-stale-cache.md`. Bad: `note1.md`, `Release Build.md`.
 - `meetings/` filenames start with the date: `YYYY-MM-DD-<topic>.md` — recurring
   meetings would otherwise collide with the uniqueness rule.
-- A rename counts as a destructive operation (breaks inbound links until updated) → MR channel.
+- **Agents**: a rename is destructive (it breaks inbound links until they are
+  retargeted) → MR channel, retargeting every inbound wikilink in the same MR.
+  **Humans**: rename freely by direct commit — lint reports whatever links went
+  dangling and the refine stage repairs them.
+
+`scripts/lint.py` is the executable definition of these rules.
 
 ## Source field
 
@@ -79,8 +78,16 @@ record — regardless of whether it arrived via inbox or kb-save).
 
 - `raw` — just filed; minimally cleaned up.
 - `curated` — links, tags, and formatting verified; connected to related notes.
-- `evergreen` — distilled, possibly merged from several notes; safe to trust long-term.
+  Floor (enforced by `scripts/lint.py`): non-empty `domains` and ≥ 1 wikilink.
+- `evergreen` — distilled, possibly merged from several notes; safe to trust
+  long-term. **Evergreen is human-conferred**: it means a person stood behind the
+  note. That is what makes kb-search's trust order worth anything.
 
-Promotion is done by the loop (refine stage) or by humans. Demotion (any single step
-down the ladder) is allowed when content is found stale or wrong — record why in the
-commit message.
+| Transition | Who | Channel |
+|---|---|---|
+| `raw → curated` | Agent (refine stage) or human | Direct commit, once the curated floor is met |
+| `curated → evergreen` | **Human only** | Human direct commit. An agent may *nominate* by opening an MR that sets `evergreen` — never by committing the promotion to `main` |
+| Demotion (one level down) | Agent or human | Direct commit; reason required in the commit message |
+
+Demotion lowers a trust claim, so it needs no review. Promotion to `evergreen`
+raises one, so it needs a human.

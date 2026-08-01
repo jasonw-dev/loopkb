@@ -1,0 +1,59 @@
+# Instance Configuration
+
+<!-- TEMPLATE SKELETON — this is the ONE file you fill in when instantiating.
+     Replace every <angle-bracket placeholder> below and delete this comment. -->
+
+This file is **owned by the instance**. Framework files (`CLAUDE.md`,
+`_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`, `.claude/skills/`,
+`scripts/`) never carry instance-specific content, so pulling template updates
+(`git merge upstream/main`, see GETTING-STARTED.md → "Updating an instance")
+never conflicts with what you configure here.
+
+**Precedence**: policies in this file OVERRIDE the framework defaults in
+`CLAUDE.md`. Agents read `CLAUDE.md` first, then this file.
+
+## Identity
+
+- **Note body language**: <e.g. English · or: Traditional Chinese (Taiwan), technical terms kept in English>
+- **Vault scope**: <one sentence: what knowledge belongs to this vault, e.g. "cross-repo engineering knowledge for the platform group">
+
+Filenames, frontmatter keys, and tag values are always English regardless of the
+body language (see `CLAUDE.md` → Language policy).
+
+## Domain tag vocabulary (closed)
+
+`domains:` values MUST come from this list. Adding a value requires a rule-change
+MR (`_meta/loop.md`, reflect stage). `scripts/lint.py` reads the vocabulary from
+the list items in this section — one kebab-case tag per line, backticks optional.
+
+**Setup gate**: this vault counts as *set up* once this list is non-empty. Until
+then, `kb-loop` refuses to run and agents may still edit `_meta/` directly. Once
+it is non-empty, the `_meta/` MR-only rule for agents is active.
+
+<!-- Fill in below. Example for an engineering vault:
+- `ci-cd`
+- `tooling`
+- `infrastructure`
+- `frontend`
+- `backend`
+-->
+
+## Project tags
+
+`projects:` values are repo names of related projects. Open vocabulary, but each
+value must be a real repo name (verifiable), not free text.
+
+- **Repo namespace**: <e.g. all repos under github.com/<org> · or: n/a for a personal vault>
+
+## Policy overrides
+
+Framework defaults apply unless overridden here. Delete the ones you do not need.
+
+- **MR platform**: <e.g. GitHub pull requests via `gh` · GitLab MRs via `glab` · none — use the MR fallback in CLAUDE.md>
+- **Write tiers**: <e.g. defaults apply · or, during a trial period: ALL refine
+  operations go through MRs, including link/tag/format edits>
+- **Evergreen promotion**: human-only by default (`_meta/taxonomy.md`). <Name the
+  people who confer it, if that is worth recording.>
+- **Per-run limits**: <e.g. defaults apply (10 notes refined, 3 MRs per run)>
+- **Extra type folders**: <e.g. none · or: `journal/` — add a matching template in `_meta/templates/`>
+- **Lease**: <e.g. defaults apply (2h TTL) · or: solo vault, lock stays local>
