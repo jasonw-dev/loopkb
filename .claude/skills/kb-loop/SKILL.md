@@ -73,19 +73,26 @@ is merged or closed (`git push origin --delete <branch>`; `git branch -D <branch
 ## After
 
 1. Write the digest to `_meta/digest.md` (overwrite it; the structure is in
-   `_meta/loop.md` → The digest) and commit it with the same text in the message body:
-   `[kb-loop] run report: <YYYY-MM-DD>`. "Risky actions" comes first and carries the
-   commit SHAs in `autonomous` mode, or the open MR URLs in `reviewed` mode; write
-   `none` when the section is empty.
-2. Push main — unless the vault has no `origin` remote, in which case skip the push
+   `_meta/loop.md` → The digest) — but do **not** commit it yet. "Risky actions" comes
+   first and carries the short commit SHA of every risky action in `autonomous` mode,
+   or the open MR URLs in `reviewed` mode; write `none` when the section is empty. Every
+   risky commit already exists at this point, so every SHA is available.
+2. Run `python3 scripts/verify_digest.py`; if it fails, complete the digest and rerun —
+   never commit the report over a failing verifier. It lists any risky action of this
+   run (deletion or rename under a type folder, `_meta/` change, status demotion) whose
+   short SHA is missing from the digest.
+3. Commit the digest with the same text in the message body:
+   `[kb-loop] run report: <YYYY-MM-DD>`. This is the last commit of the run — it is the
+   window marker both reflect and the verifier use next time.
+4. Push main — unless the vault has no `origin` remote, in which case skip the push
    (and the pre-flight pull): a local-only vault is a valid setup, not an error.
    On conflict: rebase and retry; if the conflict cannot be resolved,
    abort, keep the work on a local branch, and tell the user sync is pending.
    Never force-push main (see CLAUDE.md guardrails for the `kb-loop/*` branch rule).
-3. **Release the lease**: `python3 scripts/lease.py release`. Do this on every exit
+5. **Release the lease**: `python3 scripts/lease.py release`. Do this on every exit
    path, including aborts and errors — a lease left behind blocks the next run for
    two hours.
-4. Tell the user: what was processed; the risky actions they may want to revert
+6. Tell the user: what was processed; the risky actions they may want to revert
    (`autonomous`) or the MRs awaiting review (`reviewed`); evergreen nominations;
    items stuck in inbox and what context they need; and the final `scripts/lint.py`
    exit status. Point them at `_meta/digest.md` — that is where it all lives.

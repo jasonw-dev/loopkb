@@ -20,7 +20,7 @@ for agent behavior. Other agents (Codex CLI, etc.) are pointed here via `AGENTS.
 | `_meta/loop.md` | The 4-stage maintenance pipeline and its guardrails |
 | `_meta/digest.md` | Framework-managed: the latest run's digest, overwritten every run |
 | `_meta/templates/` | One template per note type — always instantiate from these |
-| `scripts/lint.py` | Executable definition of the schema; `scripts/lease.py` guards concurrent loop runs |
+| `scripts/` | `lint.py` = executable definition of the schema · `lease.py` = one loop run at a time · `verify_digest.py` = proves the digest itemizes every risky action |
 | `.claude/skills/*/SKILL.md` | Operating procedures for kb-setup / kb-save / kb-search / kb-loop — applies to ALL agents, not just Claude Code |
 
 ## Frontmatter schema
@@ -108,7 +108,9 @@ Structure, in this order:
 
 1. Header — date, governance mode, machine/holder.
 2. **Risky actions** — first, and itemized: merges (which notes, why), deletions,
-   moves/renames, `_meta/` rule changes, demotions. Say `none` when there were none.
+   moves/renames, `_meta/` rule changes, demotions. **Every line carries that action's
+   short commit SHA** — it makes `git revert <sha>` copy-pasteable and it is what
+   `scripts/verify_digest.py` matches against. Say `none` when there were none.
    In `reviewed` mode this section lists the *open MRs* awaiting review instead of
    applied actions.
 3. Triage / refine / reflect / lint summaries.
@@ -117,6 +119,12 @@ Structure, in this order:
 
 The digest is the human's whole interface to the loop: in `autonomous` mode, reading
 it and reverting what looks wrong is the entire review duty.
+
+Its completeness is therefore checked, not trusted. Write the digest first, then run
+`python3 scripts/verify_digest.py`, then make the report commit — the script re-derives
+the run's risky actions from git and exits 1 naming any whose short SHA is missing from
+`_meta/digest.md`. Never commit the report over a failing verifier (`_meta/loop.md` →
+The digest → Verification).
 
 ## Commit conventions
 

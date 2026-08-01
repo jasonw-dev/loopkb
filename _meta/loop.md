@@ -57,7 +57,11 @@ For each item in `_inbox/`:
 5. If the type cannot be decided confidently: leave the item in `_inbox/` and prepend
    a visible callout (`> [!note] kb-loop: cannot classify — …`) so a human can add
    context. Never use HTML comments — they are invisible in Obsidian's reading view.
-6. **Skip items already annotated**: if an item already carries a kb-loop callout and
+6. **Apparent secrets are never filed**: an item containing a credential, token, private
+   key or personal data stays in `_inbox/` with the rotation callout — see
+   `_meta/taxonomy.md` → "What does NOT belong", which also explains why rotation, not
+   deletion, is the remedy.
+7. **Skip items already annotated**: if an item already carries a kb-loop callout and
    has had no human modification since the last run (`git log` on the file shows no
    unprefixed commit after the annotating one, and it has no uncommitted changes),
    leave it untouched and list it in the digest instead of re-annotating.
@@ -240,11 +244,12 @@ MRs and no branch hygiene there — every action is a commit on `main`.
 - **Rejected inbox items**: commit the annotated item (`[kb-loop]` prefix) so the
   rejection survives across machines and runs. Moving the content to its proper home
   and deleting the item is the human's job.
-- **Report carrier**: every run ends by writing `_meta/digest.md` and committing it on
-  `main` with the message `[kb-loop] run report: <YYYY-MM-DD>` and the same digest in
-  the commit body (use `git commit --allow-empty` only if the digest itself is
-  somehow unchanged). This commit is also the reflect stage's window marker for the
-  next run.
+- **Report carrier**: every run ends by writing `_meta/digest.md`, running
+  `python3 scripts/verify_digest.py`, and only then committing the digest on `main`
+  with the message `[kb-loop] run report: <YYYY-MM-DD>` and the same digest in the
+  commit body (use `git commit --allow-empty` only if the digest itself is somehow
+  unchanged). This commit is also the reflect stage's window marker for the next run —
+  and the verifier's, which is why it must be the last commit of the run.
 - **MR descriptions** (`reviewed` mode): MRs are created mid-run; update their
   description with the digest after lint completes.
 - **"Connected to related notes"** (curated criterion) is vacuously satisfied while
@@ -264,9 +269,10 @@ Sections, in this order:
 2. **Risky actions** — FIRST, because it is the only section that can need a human
    today. In `autonomous` mode, one line per applied risky action: merges (which
    notes, why), deletions, moves/renames, `_meta/` rule changes, demotions — each
-   with its commit SHA so `git revert <sha>` is copy-pasteable. Write `none` when
-   there were none. In `reviewed` mode this section lists the open MRs awaiting
-   review instead, with their URLs.
+   line carrying that action's **short commit SHA** so `git revert <sha>` is
+   copy-pasteable, and so `scripts/verify_digest.py` can check the list is complete
+   (see "Verification" below). Write `none` when there were none. In `reviewed` mode
+   this section lists the open MRs awaiting review instead, with their URLs.
 3. **Triage** — what was filed, and items skipped as already-annotated.
 4. **Refine** — what was improved, which notes were freshness-checked and the verdict.
 5. **Reflect** — corrections observed, patterns counted, what was landed or proposed,
@@ -278,3 +284,27 @@ Sections, in this order:
 
 A human reading only the header, "Risky actions" and "Stuck" must be able to decide
 whether to act. Everything else is the audit trail.
+
+### Verification — before the report commit
+
+The digest is written LAST but BEFORE the report commit, so every risky action of the
+run already exists as a commit and already has a SHA by the time its line is written.
+With the digest written and all other work committed:
+
+```
+python3 scripts/verify_digest.py      # exit 1 = a risky action has no digest line
+```
+
+The script re-derives the risky actions from git — deletions and renames under the type
+folders, `_meta/` changes other than `_meta/digest.md` itself, and `status:` demotions —
+across the agent commits since the previous report commit, and fails when any of their
+short SHAs is absent from `_meta/digest.md`. It prints `missing from digest: <sha>
+<subject>` for each. Complete the digest and rerun; **never make the report commit over
+a failing verifier.** In `autonomous` mode the digest is the human's only view of the
+run, so an unreported risky action is a framework violation, not a formatting slip.
+
+In `reviewed` mode a risky agent commit should not be sitting on `main` at all — it
+belongs on a `kb-loop/*` branch behind an MR. The verifier flagging one there is
+correct behaviour and a useful tripwire: something bypassed the MR channel. Adding a
+digest line silences the script but does not make the bypass legitimate — say so in the
+digest and route the next one properly.
