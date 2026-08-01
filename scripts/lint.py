@@ -49,7 +49,11 @@ DATED_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-(.+)$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 KEY_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$")
 WIKILINK_RE = re.compile(r"\[\[([^\]\|#]+)")
-VOCAB_RE = re.compile(r"^-\s*`?([a-z0-9][a-z0-9-]*)`?\s*$")
+# A vocabulary entry is a Markdown list item; everything after an em/en-dash or
+# ` - ` separator is a human annotation the parser ignores.
+VOCAB_ITEM_RE = re.compile(r"^[-*]\s+(\S.*)$")
+VOCAB_ANNOTATION_RE = re.compile(r"\s+[—–-]\s+")
+VOCAB_BACKTICK_RE = re.compile(r"^`([^`]*)`")
 
 
 # --------------------------------------------------------------------------- #
@@ -140,23 +144,56 @@ def wikilinks(body: str) -> list[str]:
 # --------------------------------------------------------------------------- #
 
 
-def read_vocabulary(vault: Path) -> tuple[set[str], list[str]]:
-    """Parse the closed domain vocabulary out of _meta/instance.md."""
+def vocabulary_tag(item: str) -> str | None:
+    """The tag of one vocabulary list item, or None when it carries no valid tag.
+
+    The item may carry a trailing annotation — `- ``tooling`` — dev environment` —
+    which is for humans only: the tag is the first backtick-quoted token, else the
+    first whitespace-delimited token, of the part before the ` — ` / ` - ` separator.
+    """
+    head = VOCAB_ANNOTATION_RE.split(item, 1)[0].strip()
+    quoted = VOCAB_BACKTICK_RE.match(head)
+    candidate = quoted.group(1).strip() if quoted else head.split()[0] if head.split() else ""
+    return candidate if KEBAB_RE.match(candidate) else None
+
+
+def read_vocabulary(vault: Path) -> tuple[set[str], list[str], list[str]]:
+    """Parse the closed domain vocabulary out of _meta/instance.md.
+
+    Returns (vocabulary, violations, warnings). A list item in the vocabulary
+    section that yields no tag is warned about rather than dropped in silence —
+    a silently lost tag reads to its author as a tag that exists, and every note
+    using it is then flagged out-of-vocabulary for no visible reason.
+    """
     instance = vault / "_meta" / "instance.md"
     if not instance.is_file():
-        return set(), ["_meta/instance.md: missing — the instance configuration file is required"]
+        return (
+            set(),
+            ["_meta/instance.md: missing — the instance configuration file is required"],
+            [],
+        )
     text = strip_comments(instance.read_text(encoding="utf-8"))
     vocab: set[str] = set()
+    warnings: list[str] = []
     in_section = False
     for line in text.splitlines():
         if line.startswith("#"):
             in_section = line.lstrip("#").strip().lower().startswith("domain tag vocabulary")
             continue
-        if in_section:
-            match = VOCAB_RE.match(line.strip())
-            if match:
-                vocab.add(match.group(1))
-    return vocab, []
+        if not in_section:
+            continue
+        item = VOCAB_ITEM_RE.match(line.strip())
+        if not item:
+            continue
+        tag = vocabulary_tag(item.group(1))
+        if tag is None:
+            warnings.append(
+                f"_meta/instance.md: warning: vocabulary line carries no kebab-case tag and is "
+                f"ignored — {line.strip()!r}"
+            )
+            continue
+        vocab.add(tag)
+    return vocab, [], warnings
 
 
 def type_folders(vault: Path) -> list[str]:
@@ -257,8 +294,9 @@ def lint(vault: Path) -> tuple[list[str], list[str], int]:
     """Returns (violations, warnings, notes checked). Warnings never fail the run."""
     problems: list[str] = []
     warnings: list[str] = []
-    vocab, vocab_problems = read_vocabulary(vault)
+    vocab, vocab_problems, vocab_warnings = read_vocabulary(vault)
     problems.extend(vocab_problems)
+    warnings.extend(vocab_warnings)
 
     folders = type_folders(vault)
     if not folders:

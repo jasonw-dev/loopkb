@@ -174,6 +174,36 @@ class LintTest(TempDirTestCase):
         (self.vault / "_meta" / "instance.md").unlink()
         self.assert_violation("_meta/instance.md: missing")
 
+    def write_vocabulary(self, *lines: str) -> None:
+        write(
+            self.vault / "_meta" / "instance.md",
+            "# Instance Configuration\n\n## Domain tag vocabulary (closed)\n\n"
+            + "".join(f"{line}\n" for line in lines),
+        )
+
+    def test_annotated_vocabulary_lines_are_parsed(self) -> None:
+        self.write_vocabulary(
+            "- `ci-cd` — pipelines, runners: the whole release path",
+            "- `tooling` - dev environment: toolchains, IDE setup",
+            "- infrastructure — cloud, networking",
+        )
+        write(
+            self.vault / "guides" / "annotated-domains.md",
+            "---\ntype: guides\ndomains: [ci-cd, tooling, infrastructure]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Annotated\n",
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("warning", out)
+
+    def test_unreadable_vocabulary_line_warns_without_failing(self) -> None:
+        self.write_vocabulary("- `ci-cd`", "- `tooling`", "- **Not A Tag** — prose that slipped in")
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertIn("vocabulary line carries no kebab-case tag", out)
+        self.assertIn("**Not A Tag**", out)
+        self.assertIn("1 warning(s)", out)
+
     def test_note_in_a_non_type_folder_warns_without_failing(self) -> None:
         write(
             self.vault / "notes" / "stray.md",

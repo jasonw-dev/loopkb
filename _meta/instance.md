@@ -42,15 +42,17 @@ stage-by-stage effects in `_meta/loop.md`.
 `domains:` values MUST come from this list. Adding a value is a `_meta/` rule change
 (`_meta/loop.md`, reflect stage) and travels through the channel of the active
 governance mode. `scripts/lint.py` reads the vocabulary from the list items in this
-section — one kebab-case tag per line, backticks optional.
+section — one kebab-case tag per line, backticks optional, and an optional annotation
+after the tag (``- `tag` — optional description``). A list item the linter cannot read a
+tag out of is reported as a warning, never dropped in silence.
 
 **Setup gate**: this vault counts as *set up* once this list is non-empty. Until
 then, `kb-loop` refuses to run and agents may still edit `_meta/` directly and
 unreported. Once it is non-empty, the `_meta/` write rule for agents is active.
 
 <!-- Fill in below. Example for an engineering vault:
-- `ci-cd`
-- `tooling`
+- `ci-cd` — pipelines, runners, release automation
+- `tooling` — dev environment: toolchains, IDE setup
 - `infrastructure`
 - `frontend`
 - `backend`
