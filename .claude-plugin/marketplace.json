@@ -9,7 +9,7 @@
     {
       "name": "loopkb",
       "source": "./",
-      "description": "Knowledge-base skills for a loopkb vault: kb-save, kb-search, kb-loop.",
+      "description": "Knowledge-base skills for a loopkb vault: kb-setup (join a vault in one command), kb-save, kb-search, kb-loop.",
       "category": "productivity",
       "tags": ["knowledge-base", "obsidian", "notes"]
     }
