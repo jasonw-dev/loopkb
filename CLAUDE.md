@@ -35,6 +35,9 @@ status: raw                      # raw -> curated -> evergreen (see taxonomy.md)
 
 ## Write tiers
 
+These tiers bind **agents only**. Humans always commit directly, without prefixes —
+the reflect stage depends on those unprefixed commits as its correction signal.
+
 | Operation | Channel |
 |---|---|
 | Add note, add links/tags, formatting fix, status promotion | Commit directly to `main` |
@@ -63,7 +66,9 @@ locally (`git diff main...`), then merge. The review step never disappears.
 
 ## Guardrails (non-negotiable)
 
-1. `git pull --rebase` before starting any work; push when done. On conflict: rebase and retry. Never force-push.
+1. `git pull --rebase` before starting any work; push when done. On conflict: rebase
+   and retry. Never force-push `main` or any shared branch; updating your own open
+   `kb-loop/*` branch after a rebase uses `--force-with-lease`.
 2. Never touch uncommitted changes outside `_inbox/` — that is work a human is still writing.
 3. When merging notes, the full original content must be reviewable in the MR diff. Never silently summarize away information.
 4. Respect per-run limits defined in `_meta/loop.md`; unfinished work is picked up by the next run (the loop is stateless).

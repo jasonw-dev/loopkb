@@ -27,7 +27,8 @@ Check, in order:
    - **Confident** (clear type match, no obvious duplicate — grep the type folder
      for overlapping filenames/keywords first): instantiate
      `<vault>/_meta/templates/<type>.md`, fill it, name per naming rules, save to the
-     type folder with `status: raw`, `source: conversation`.
+     type folder with `status: raw`; `source` per taxonomy.md's Source field rules
+     (meeting material → `meeting`, otherwise `conversation`).
    - **Not confident** (ambiguous type, possible duplicate, tag not in vocabulary):
      save the raw extraction to `<vault>/_inbox/<slug>.md` with a leading comment
      stating what is unclear. The loop will handle it.

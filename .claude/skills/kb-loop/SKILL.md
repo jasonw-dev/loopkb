@@ -16,7 +16,8 @@ Run the maintenance loop. You MUST be inside the vault repo.
    user to fill it first — triage cannot classify against an empty vocabulary.
 3. `git status` — if there are uncommitted changes outside `_inbox/`, STOP and ask the
    user; that is someone's work in progress.
-4. `git pull --rebase`.
+4. `git pull --rebase --autostash` (inbox may legitimately hold uncommitted human
+   annotations — autostash carries them across the rebase).
 
 ## Execute
 
@@ -38,6 +39,8 @@ git checkout main
 ## After
 
 1. Write the run report (per `_meta/loop.md` format) into the final commit message body.
-2. Push main. On conflict: rebase, retry. Never force-push.
+2. Push main. On conflict: rebase and retry; if the conflict cannot be resolved,
+   abort, keep the work on a local branch, and tell the user sync is pending.
+   Never force-push main (see CLAUDE.md guardrails for the `kb-loop/*` branch rule).
 3. Tell the user: what was processed, MRs awaiting review, items stuck in inbox and
    what context they need.

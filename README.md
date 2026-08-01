@@ -30,8 +30,10 @@ appends to:
 - **Framework vs. instance.** This template carries the structure, schema, skills, and
   rule *formats*. Each instance (a team KB, a personal second brain) fills in its own
   vocabulary and policies. Scale by adding vaults, not by deepening one.
-- **Write tiers.** Additive operations commit straight to main; destructive ones
-  (merge, delete, move, rule changes) go through MRs a human reviews.
+- **Write tiers.** For agents, additive operations commit straight to main;
+  destructive ones (merge, delete, move, rule changes) go through MRs a human
+  reviews. Humans always commit freely — their unprefixed commits are the
+  correction signal the taxonomy learns from.
 
 ## What it looks like
 
@@ -67,8 +69,7 @@ CI release job fails with checksum mismatch after a dependency bump.
 
 ## Quick start
 
-1. Create a repo from this template (maintainers: keep the repo marked as a
-   Template repository in GitHub settings).
+1. Create a repo from this template.
 2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — three daily actions, plus
    instance setup.
 3. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).

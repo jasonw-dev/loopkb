@@ -11,7 +11,7 @@ Search the team knowledge base before re-deriving a solution from scratch.
 
 Same resolution as kb-save: the `KB_VAULT` line in your loaded context (imported
 from the per-user file), else ask once and offer to create that file.
-If the vault clone is missing or stale, `git -C <vault> pull` first (skip on network failure — search the local copy).
+If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (skip on network failure — search the local copy).
 
 ## Steps
 
@@ -46,3 +46,6 @@ After solving a non-trivial problem worth sharing, save it with kb-save.
 
 Each person creates `~/.claude/<vault-name>.md` once — every repo wired to the same
 vault imports the same file, so the path is configured a single time per machine.
+
+If the project repo also serves non-Claude agents, put the same section (or a
+pointer to CLAUDE.md) in its AGENTS.md — those agents do not read CLAUDE.md by default.
