@@ -7,11 +7,31 @@ Usage:
     python3 scripts/lease.py status  [--ttl-hours 2]
 
 Mechanism: an orphan branch `kb-loop-lock` holding a single empty commit whose
-message records the holder and an ISO-8601 acquisition timestamp. The branch is
-pushed to `origin`, so every clone sees the same lock. `acquire` fails when the
-lock exists and is younger than the TTL (default 2 hours); an older lock is
-considered stale and is replaced. `release` deletes the branch locally and on
-the remote.
+message records the holder, the session, and an ISO-8601 acquisition timestamp.
+The branch is pushed to `origin`, so every clone sees the same lock. `acquire`
+fails when the lock exists and is younger than the TTL (default 2 hours); an
+older lock is considered stale and is replaced. `release` deletes the branch
+locally and on the remote.
+
+Compare-and-swap, not check-then-write. Reading the lock and then publishing one
+is two steps, so the publish itself has to be the atomic test:
+
+  * taking a free lock pushes WITHOUT `--force`. Git rejects a non-fast-forward
+    update, and the lock commit is an orphan, so a push that lands proves the ref
+    did not exist a moment ago. A rejection means someone else won the race — the
+    rejection IS the compare-and-swap, and this process backs off.
+  * replacing a stale lock, or refreshing one we already hold, pushes with
+    `--force-with-lease=<ref>:<sha we read>`, so a concurrent takeover loses
+    cleanly instead of being silently overwritten.
+  * with no remote, `git update-ref <ref> <new> <expected>` gives the same
+    semantics against the local ref (an empty `<expected>` means "must not exist").
+
+Sessions: the lock also records a session id (`KB_LOOP_SESSION`, else the parent
+process id). Only the same holder in the same session may refresh a live lock —
+otherwise two terminals on one machine, sharing a holder name, would each
+"refresh" their way into a concurrent run. A dead run's lock is cleared by
+`release` or by the TTL, not by a second terminal inheriting it. Locks written by
+older versions carry no session and stay refreshable by their holder.
 
 Degradation: with no `origin` remote (a solo vault that never pushes), the lock
 is a purely local ref and the same rules apply.
@@ -31,6 +51,17 @@ from datetime import datetime, timedelta, timezone
 LOCK_REF = "refs/heads/kb-loop-lock"
 LOCK_NAME = "kb-loop-lock"
 MIRROR_REF = "refs/kb-loop-lock/remote"
+
+# Substrings git uses when it refuses an update because the ref moved under us.
+# Anything else is an infrastructure failure, not a lost race.
+REJECT_MARKERS = (
+    "rejected",
+    "stale info",
+    "non-fast-forward",
+    "fetch first",
+    "cannot lock ref",
+    "reference already exists",
+)
 
 
 def git(*args: str, check: bool = True) -> str:
@@ -54,6 +85,11 @@ def default_holder() -> str:
         return env
     user = git("config", "--get", "user.name", check=False) or os.environ.get("USER", "unknown")
     return f"{user}@{socket.gethostname()}"
+
+
+def default_session() -> str:
+    """Distinguishes two runs that share a holder name — e.g. two terminals."""
+    return os.environ.get("KB_LOOP_SESSION") or str(os.getppid())
 
 
 def now_iso() -> str:
@@ -117,9 +153,10 @@ def lock_info(sha: str) -> dict[str, str]:
         if ":" in line:
             key, _, value = line.partition(":")
             key = key.strip().lower()
-            if key in ("holder", "acquired"):
+            if key in ("holder", "acquired", "session"):
                 info[key] = value.strip()
     info.setdefault("holder", "unknown")
+    info.setdefault("session", "")  # locks written before sessions existed
     info.setdefault("acquired", git("log", "-1", "--format=%cI", sha))
     return info
 
@@ -131,9 +168,18 @@ def age(info: dict[str, str]) -> timedelta | None:
     return datetime.now(timezone.utc) - acquired
 
 
-def write_lock(holder: str) -> str:
-    empty_tree = git("hash-object", "-t", "tree", "/dev/null")
-    message = f"kb-loop lock\n\nholder: {holder}\nacquired: {now_iso()}\n"
+def create_lock_commit(holder: str, session: str = "") -> str:
+    """Build the lock commit object. It is not referenced anywhere until published."""
+    tree = subprocess.run(
+        ["git", "hash-object", "-w", "-t", "tree", "--stdin"],
+        input="",
+        capture_output=True,
+        text=True,
+    )
+    if tree.returncode != 0:
+        raise SystemExit(f"could not create the empty tree: {tree.stderr.strip()}")
+    empty_tree = tree.stdout.strip()
+    message = f"kb-loop lock\n\nholder: {holder}\nsession: {session}\nacquired: {now_iso()}\n"
     proc = subprocess.run(
         ["git", "commit-tree", empty_tree, "-m", message],
         capture_output=True,
@@ -141,40 +187,90 @@ def write_lock(holder: str) -> str:
     )
     if proc.returncode != 0:
         raise SystemExit(f"could not create lock commit: {proc.stderr.strip()}")
-    sha = proc.stdout.strip()
-    git("update-ref", LOCK_REF, sha)
+    return proc.stdout.strip()
+
+
+def classify_failure(stderr: str) -> str:
+    lowered = stderr.lower()
+    return "rejected" if any(marker in lowered for marker in REJECT_MARKERS) else "error"
+
+
+def publish_lock(sha: str, expected: str | None) -> tuple[str, str]:
+    """Compare-and-swap the lock ref to `sha`.
+
+    `expected` is the sha the lock must currently have; None means it must not
+    exist at all. Returns ("ok" | "rejected" | "error", detail). "rejected" means
+    another process won the race — never an infrastructure problem.
+    """
     if has_remote():
-        push = subprocess.run(
-            ["git", "push", "--force", "origin", f"{LOCK_REF}:{LOCK_REF}"],
-            capture_output=True,
-            text=True,
+        if expected is None:
+            args = ["push", "origin", f"{sha}:{LOCK_REF}"]
+        else:
+            args = ["push", f"--force-with-lease={LOCK_REF}:{expected}", "origin", f"{sha}:{LOCK_REF}"]
+        proc = subprocess.run(["git", *args], capture_output=True, text=True)
+        if proc.returncode != 0:
+            return classify_failure(proc.stderr), proc.stderr.strip()
+        git("update-ref", LOCK_REF, sha)
+        return "ok", ""
+
+    proc = subprocess.run(
+        ["git", "update-ref", LOCK_REF, sha, expected or ""],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        return classify_failure(proc.stderr), proc.stderr.strip()
+    return "ok", ""
+
+
+def report_failure(status: str, detail: str) -> int:
+    if status == "rejected":
+        print(
+            "lease: lost the race — another run took the lock while this one was reading it. "
+            "Stop here; run `python3 scripts/lease.py status` to see who holds it.",
+            file=sys.stderr,
         )
-        if push.returncode != 0:
-            git("update-ref", "-d", LOCK_REF, check=False)
-            raise SystemExit(f"could not publish the lock to origin: {push.stderr.strip()}")
-    return sha
+    else:
+        print(f"lease: could not publish the lock: {detail}", file=sys.stderr)
+    return 1
 
 
 def cmd_acquire(args: argparse.Namespace) -> int:
     holder = args.holder or default_holder()
+    session = default_session()
     sha = fetch_lock()
+
     if sha:
         info = lock_info(sha)
         held_for = age(info)
-        if info["holder"] == holder:
-            write_lock(holder)
+        # A missing session means a lock from an older version: holder alone decides.
+        ours = info["holder"] == holder and info["session"] in ("", session)
+        if ours:
+            status, detail = publish_lock(create_lock_commit(holder, session), expected=sha)
+            if status != "ok":
+                return report_failure(status, detail)
             print(f"lease: refreshed by {holder}")
             return 0
         if held_for is not None and held_for < timedelta(hours=args.ttl_hours):
             minutes = int(held_for.total_seconds() // 60)
+            same_identity = info["holder"] == holder
+            where = " in another session" if same_identity else ""
             print(
-                f"lease: held by {info['holder']} since {info['acquired']} ({minutes}m ago) — "
-                f"not stale until {args.ttl_hours}h. Another loop run is in progress; stop here.",
+                f"lease: held by {info['holder']}{where} since {info['acquired']} ({minutes}m ago) — "
+                f"not stale until {args.ttl_hours}h. Another loop run is in progress; stop here."
+                + (
+                    " If that run is dead, clear it with `python3 scripts/lease.py release`."
+                    if same_identity
+                    else ""
+                ),
                 file=sys.stderr,
             )
             return 1
         print(f"lease: replacing stale lock held by {info['holder']} since {info['acquired']}")
-    write_lock(holder)
+
+    status, detail = publish_lock(create_lock_commit(holder, session), expected=sha)
+    if status != "ok":
+        return report_failure(status, detail)
     scope = "origin" if has_remote() else "local only (no origin remote)"
     print(f"lease: acquired by {holder} — {scope}")
     return 0
