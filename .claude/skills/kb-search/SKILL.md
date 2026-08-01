@@ -49,6 +49,14 @@ On build/environment/dependency problems, search the knowledge base first (kb-se
 After solving a non-trivial problem worth sharing, save it with kb-save.
 ```
 
+Substitute `<vault repo URL>` and `<vault-name>` with the real values; leave `<KB_VAULT>`
+literal — it is not a placeholder for you to fill, agents resolve it at runtime from the
+imported per-user file.
+
+`<vault-name>` is the vault repo's basename without `.git` (`git@host:team/team-kb.git` →
+`team-kb`) — the same rule `kb-setup` uses when it writes the file. Use any other name and
+kb-setup writes a file this import never reads.
+
 Each person creates `~/.claude/<vault-name>.md` once — `kb-setup` writes it when they
 join the vault. Every repo wired to the same vault imports the same file, so the path
 is configured a single time per machine.
@@ -60,3 +68,6 @@ vault to read.
 
 If the project repo also serves non-Claude agents, put the same section (or a
 pointer to CLAUDE.md) in its AGENTS.md — those agents do not read CLAUDE.md by default.
+`@~/.claude/<vault-name>.md` is **Claude Code import syntax**, not a general convention:
+a non-Claude agent must open `~/.claude/<vault-name>.md` itself and read the `KB_VAULT:`
+line out of it. Say that explicitly in the AGENTS.md copy.
