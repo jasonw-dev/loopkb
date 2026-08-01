@@ -22,7 +22,8 @@ Check, in order:
    conversation context must understand it. Include exact commands, versions,
    error messages. Strip conversational noise.
 2. **Classify**: Apply the decision rules in `<vault>/_meta/taxonomy.md`. Determine
-   type, domains (closed vocabulary — never invent tags), projects.
+   type, domains (closed vocabulary in `<vault>/_meta/instance.md` — never invent
+   tags), projects.
 3. **File it**:
    - **Confident** (clear type match, no obvious duplicate — grep the type folder
      for overlapping filenames/keywords first): instantiate
@@ -47,4 +48,5 @@ Check, in order:
 - One note per distinct piece of knowledge. Two problems solved = two notes.
 - Follow the vault's CLAUDE.md write tiers: kb-save only ADDS notes. Never modify
   existing notes from this skill — that is the loop's job.
-- Body language: per the instance header in `_meta/taxonomy.md`.
+- Body language: per `_meta/instance.md` → Identity (English when unset).
+- New notes are always `status: raw`. Never write `curated` or `evergreen` here.

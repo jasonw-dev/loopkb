@@ -15,11 +15,14 @@ If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (sk
 
 ## Steps
 
-1. Read `<vault>/_meta/taxonomy.md` — learn the type folders and tag vocabulary.
+1. Read `<vault>/_meta/taxonomy.md` for the type folders and `<vault>/_meta/instance.md`
+   for the domain tag vocabulary and vault scope.
 2. Search in this order:
    - Filename scan of the likely type folder (filenames are descriptive kebab-case).
    - `grep -ril` across the vault for error-message fragments, tool names, tag values.
 3. Rank hits: `status: evergreen` > `curated` > `raw`. Prefer newer `created` on conflict.
+   The order is not decoration: `curated` means an agent met a mechanical floor, while
+   `evergreen` means a human stood behind the note and conferred that status by hand.
 4. Follow `[[wikilinks]]` from hits — related notes often hold the missing half of the answer.
 5. Apply the found solution, citing the note (`filename`) so the user knows the source.
 6. **Miss with pain**: if nothing was found and solving it took real effort, offer to
@@ -46,6 +49,11 @@ After solving a non-trivial problem worth sharing, save it with kb-save.
 
 Each person creates `~/.claude/<vault-name>.md` once — every repo wired to the same
 vault imports the same file, so the path is configured a single time per machine.
+
+For Claude Code users, installing the vault as a plugin (see the framework README)
+loads these procedures in every repo as `/loopkb:kb-search` and `/loopkb:kb-save`,
+without the per-repo wiring above. The `KB_VAULT` line is still needed to say *which*
+vault to read.
 
 If the project repo also serves non-Claude agents, put the same section (or a
 pointer to CLAUDE.md) in its AGENTS.md — those agents do not read CLAUDE.md by default.
