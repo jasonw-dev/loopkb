@@ -9,9 +9,11 @@ Save knowledge from the current conversation into the vault.
 
 ## Locate the vault
 
-The vault path is fixed per machine. Check, in order:
-1. The `KB_VAULT` line in this project's CLAUDE.md (recommended wiring).
-2. Ask the user once, then suggest adding the path to CLAUDE.md.
+The vault path is personal machine configuration. Check, in order:
+1. The `KB_VAULT` line in the project's `CLAUDE.local.md` (or CLAUDE.md) — the
+   committed CLAUDE.md carries the vault's repo URL; the local path lives in
+   `CLAUDE.local.md`, which is never committed.
+2. Ask the user once, then offer to write the path into `CLAUDE.local.md`.
 
 ## Steps
 
