@@ -20,15 +20,31 @@ never conflicts with what you configure here.
 Filenames, frontmatter keys, and tag values are always English regardless of the
 body language (see `CLAUDE.md` → Language policy).
 
+## Governance
+
+- **Mode**: `autonomous`
+
+Pick one; the definitions live in `CLAUDE.md` → "Governance modes" and the
+stage-by-stage effects in `_meta/loop.md`.
+
+- `autonomous` (framework default) — agents do everything by direct commit to
+  `main`, destructive actions included, and itemize each risky one in
+  `_meta/digest.md`; you review afterwards and `git revert` what you disagree with.
+- `reviewed` — destructive actions and `_meta/` rule changes wait for you in a merge
+  request; nothing lands on `main` until you approve it.
+
+`curated → evergreen` stays human-conferred in both modes.
+
 ## Domain tag vocabulary (closed)
 
-`domains:` values MUST come from this list. Adding a value requires a rule-change
-MR (`_meta/loop.md`, reflect stage). `scripts/lint.py` reads the vocabulary from
-the list items in this section — one kebab-case tag per line, backticks optional.
+`domains:` values MUST come from this list. Adding a value is a `_meta/` rule change
+(`_meta/loop.md`, reflect stage) and travels through the channel of the active
+governance mode. `scripts/lint.py` reads the vocabulary from the list items in this
+section — one kebab-case tag per line, backticks optional.
 
 **Setup gate**: this vault counts as *set up* once this list is non-empty. Until
-then, `kb-loop` refuses to run and agents may still edit `_meta/` directly. Once
-it is non-empty, the `_meta/` MR-only rule for agents is active.
+then, `kb-loop` refuses to run and agents may still edit `_meta/` directly and
+unreported. Once it is non-empty, the `_meta/` write rule for agents is active.
 
 <!-- Fill in below. Example for an engineering vault:
 - `ci-cd`
@@ -49,11 +65,14 @@ value must be a real repo name (verifiable), not free text.
 
 Framework defaults apply unless overridden here. Delete the ones you do not need.
 
-- **MR platform**: <e.g. GitHub pull requests via `gh` · GitLab MRs via `glab` · none — use the MR fallback in CLAUDE.md>
-- **Write tiers**: <e.g. defaults apply · or, during a trial period: ALL refine
-  operations go through MRs, including link/tag/format edits>
-- **Evergreen promotion**: human-only by default (`_meta/taxonomy.md`). <Name the
+- **MR platform** (`reviewed` mode only; ignored in `autonomous`): <e.g. GitHub pull
+  requests via `gh` · GitLab MRs via `glab` · none — use the MR fallback in CLAUDE.md>
+- **Write tiers**: <e.g. defaults for the declared mode apply · or, in `reviewed`
+  mode during a trial period: ALL refine operations go through MRs, including
+  link/tag/format edits>
+- **Evergreen promotion**: human-only in both modes (`_meta/taxonomy.md`). <Name the
   people who confer it, if that is worth recording.>
-- **Per-run limits**: <e.g. defaults apply (10 notes refined, 3 MRs per run)>
+- **Per-run limits**: <e.g. defaults apply (10 notes refined; in `reviewed` mode also
+  3 MRs per run)>
 - **Extra type folders**: <e.g. none · or: `journal/` — add a matching template in `_meta/templates/`>
 - **Lease**: <e.g. defaults apply (2h TTL) · or: solo vault, lock stays local>
