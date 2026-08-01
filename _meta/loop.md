@@ -329,6 +329,11 @@ short SHAs is absent from `_meta/digest.md`. It prints `missing from digest: <sh
 a failing verifier.** In `autonomous` mode the digest is the human's only view of the
 run, so an unreported risky action is a framework violation, not a formatting slip.
 
+It derives four of the five risky classes. The fifth — a **rewrite** that changes a
+note's meaning — looks exactly like a formatting fix to a diff, so the script cannot see
+it and a clean exit does not mean the digest is complete: that line is written honestly
+or not at all. Git and the freshness check are the recovery path, not the verifier.
+
 In `reviewed` mode a risky agent commit should not be sitting on `main` at all — it
 belongs on a `kb-loop/*` branch behind an MR. The verifier flagging one there is
 correct behaviour and a useful tripwire: something bypassed the MR channel. Adding a

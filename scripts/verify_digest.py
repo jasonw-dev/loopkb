@@ -28,6 +28,17 @@ Risky = an agent commit (subject prefixed `[kb-loop]` or `[kb-save]`) that eithe
   * changes anything under `_meta/` other than `_meta/digest.md`, or
   * demotes a note's `status:` field (a removed value ranking above the added one).
 
+What this script does NOT see, stated plainly because the digest's credibility
+depends on knowing its edges: a **semantic rewrite** of a note's content. To a
+diff, an agent rewriting a note's meaning and an agent fixing its formatting are
+the same operation, and no heuristic separates them reliably — so that one class
+of risky action still rests on the agent's own honesty in writing its digest
+line. What backs it up instead is git (every rewrite is a diff on `main`, and
+`git revert` undoes it whenever it is noticed) and the refine stage's freshness
+check, which re-reads the oldest curated/evergreen notes and demotes what no
+longer holds. Treat a clean exit as "the four mechanical classes are accounted
+for", not as "the digest is complete".
+
 Merge commits are skipped: in `reviewed` mode agent work reaches `main` through a
 human-approved merge, which is a review, not an unreported action.
 

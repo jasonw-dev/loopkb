@@ -125,11 +125,18 @@ Structure, in this order:
 The digest is the human's whole interface to the loop: in `autonomous` mode, reading
 it and reverting what looks wrong is the entire review duty.
 
-Its completeness is therefore checked, not trusted. Write the digest first, then run
+Its completeness is therefore checked where it can be. Write the digest first, then run
 `python3 scripts/verify_digest.py`, then make the report commit — the script re-derives
-the run's risky actions from git and exits 1 naming any whose short SHA is missing from
-`_meta/digest.md`. Never commit the report over a failing verifier (`_meta/loop.md` →
-The digest → Verification).
+four classes of risky action from git (deletions and renames under the type folders,
+`_meta/` changes other than the digest, and `status:` demotions) and exits 1 naming any
+whose short SHA is missing from `_meta/digest.md`. Never commit the report over a failing
+verifier (`_meta/loop.md` → The digest → Verification).
+
+**A clean verifier is not a complete digest.** The fifth class — rewriting a note's
+meaning — is indistinguishable from reformatting in a diff, so no script derives it: it
+rests on the agent writing that line honestly. Its recovery path is git (the rewrite is a
+diff on `main`, revertable whenever it is spotted) and the freshness check, which
+re-reads the oldest notes and demotes what no longer holds.
 
 ## Commit conventions
 

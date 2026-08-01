@@ -25,9 +25,14 @@ appends to:
   template update never overwrites it.
 - **Executable schema** — `scripts/lint.py` (stdlib-only Python 3) is the definition
   of what a valid note is, so "is the vault healthy?" has a deterministic answer.
-- **Checked audit trail** — the run report is not taken on trust:
-  `scripts/verify_digest.py` re-derives every risky action (deletion, rename, rule
-  change, demotion) from git and fails the run if the digest does not name it.
+- **Checked audit trail** — the run report is not taken on trust.
+  `scripts/verify_digest.py` re-derives four classes of risky action straight from git —
+  deletions and renames under the type folders, `_meta/` changes, and `status:` demotions —
+  and fails the run when the digest does not name one by SHA. The fifth, a semantic
+  rewrite of a note's content, is not machine-detectable and still rests on the agent's
+  own digest line; what backs *it* up is git — every rewrite is a diff on `main` — and the
+  refine stage's freshness check, which re-reads the oldest notes and demotes what no
+  longer holds.
 
 ## Architecture
 
