@@ -170,9 +170,10 @@ The suite is stdlib `unittest` with no fixtures on disk: it builds throwaway vau
 real git repos in temp directories to cover every linter rule, the lease's
 compare-and-swap against a bare remote with two clones, and the digest verifier.
 
-A change to user-visible behavior must also update `docs/explainer.html` (the visual
-intro, served from GitHub Pages) — it lives in the repo precisely so it cannot drift
-out of sync unnoticed.
+A change to user-visible behavior must also update `docs/index.html` (the visual intro,
+served at the GitHub Pages root, <https://jasonw-dev.github.io/loopkb/>) — it lives in the
+repo precisely so it cannot drift out of sync unnoticed. `tests/test_docs.py` holds that
+file's name to the sync rule.
 
 ## License
 

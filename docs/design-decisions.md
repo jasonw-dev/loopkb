@@ -227,8 +227,10 @@ template also ships `_meta/README.instance.md`, a stub that carries the join blo
 the rewrite.
 
 *Extended in passing.* The visual intro both READMEs open with now ships as
-`docs/explainer.html` on GitHub Pages instead of a private artifact link, so the
-first-contact path is versioned with the framework and reviewable in the same diffs.
+`docs/index.html`, served at the GitHub Pages root instead of behind a private artifact
+link, so the first-contact path is versioned with the framework and reviewable in the same
+diffs. `tests/test_docs.py` checks the file exists and that no document names the old
+path — an anti-drift rule that had itself drifted for two commits.
 
 ## D10 — Mechanical verification of what the framework promises
 
