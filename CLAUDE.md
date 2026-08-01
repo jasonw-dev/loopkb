@@ -21,7 +21,7 @@ for agent behavior. Other agents (Codex CLI, etc.) are pointed here via `AGENTS.
 | `_meta/digest.md` | Framework-managed: the latest run's digest, overwritten every run |
 | `_meta/templates/` | One template per note type — always instantiate from these |
 | `scripts/lint.py` | Executable definition of the schema; `scripts/lease.py` guards concurrent loop runs |
-| `.claude/skills/*/SKILL.md` | Operating procedures for kb-save / kb-search / kb-loop — applies to ALL agents, not just Claude Code |
+| `.claude/skills/*/SKILL.md` | Operating procedures for kb-setup / kb-save / kb-search / kb-loop — applies to ALL agents, not just Claude Code |
 
 ## Frontmatter schema
 

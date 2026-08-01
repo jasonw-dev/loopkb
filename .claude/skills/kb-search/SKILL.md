@@ -10,7 +10,8 @@ Search the team knowledge base before re-deriving a solution from scratch.
 ## Locate the vault
 
 Same resolution as kb-save: the `KB_VAULT` line in your loaded context (imported
-from the per-user file), else ask once and offer to create that file.
+from the per-user file), else ask once and offer to create that file — or run
+`kb-setup <vault url>`, which is what normally creates it.
 If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (skip on network failure — search the local copy).
 
 ## Steps
@@ -38,8 +39,9 @@ Team knowledge base: <vault repo URL>
 
 @~/.claude/<vault-name>.md
 
-The import above loads the per-user KB_VAULT setting. If undefined, ask the user
-for their clone path and offer to create ~/.claude/<vault-name>.md with a
+The import above loads the per-user KB_VAULT setting. It is normally written by
+kb-setup. If undefined, run kb-setup with the vault URL above, or ask the user for
+their clone path and offer to create ~/.claude/<vault-name>.md with a
 `KB_VAULT: /path` line.
 The kb-save / kb-search / kb-loop procedures are defined in
 `<KB_VAULT>/.claude/skills/<name>/SKILL.md` — read the relevant file before acting.
@@ -47,8 +49,9 @@ On build/environment/dependency problems, search the knowledge base first (kb-se
 After solving a non-trivial problem worth sharing, save it with kb-save.
 ```
 
-Each person creates `~/.claude/<vault-name>.md` once — every repo wired to the same
-vault imports the same file, so the path is configured a single time per machine.
+Each person creates `~/.claude/<vault-name>.md` once — `kb-setup` writes it when they
+join the vault. Every repo wired to the same vault imports the same file, so the path
+is configured a single time per machine.
 
 For Claude Code users, installing the vault as a plugin (see the framework README)
 loads these procedures in every repo as `/loopkb:kb-search` and `/loopkb:kb-save`,

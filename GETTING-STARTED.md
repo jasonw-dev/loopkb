@@ -5,6 +5,35 @@
 You interact with this knowledge base through **three daily actions**. Everything else
 is done by the maintenance loop.
 
+## Joining a vault (once per machine)
+
+In Claude Code, install the plugin and say one sentence:
+
+```
+/plugin marketplace add jasonw-dev/loopkb
+/plugin install loopkb@loopkb
+```
+
+```
+kb-setup https://github.com/<org>/<vault-repo>.git
+```
+
+`kb-setup` asks you where to clone, clones it, checks it really is a loopkb vault, runs
+the linter, and writes the per-user `~/.claude/<vault-name>.md` file that every wired
+project repo imports. Then it tells you the three actions below. Nothing else to do.
+
+<details>
+<summary>Without the plugin — the same four steps by hand</summary>
+
+1. `git clone <vault repo URL> <dest>` — any path you like.
+2. Create `~/.claude/<vault-name>.md` with a single line: `KB_VAULT: <dest>`.
+   (Per-user file, never committed: it is why a personal path stays out of git.)
+3. Verify the clone: `python3 <dest>/scripts/lint.py` must exit 0.
+4. Wire each project repo whose agents should search the vault — see
+   "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
+
+</details>
+
 ## The three actions
 
 ### 1. Drop anything into `_inbox/`
@@ -126,6 +155,8 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] Rewrite the README for your instance (the template README describes the framework).
 - [ ] Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
 - [ ] Open the vault in Obsidian once to confirm it reads well.
+- [ ] Tell your teammates how to join: install the plugin, then
+      `kb-setup <your vault repo URL>` (see "Joining a vault" above).
 
 If you run CI, wire `python3 scripts/lint.py` into it — one job per push keeps schema
 violations from ever reaching the weekly loop.
@@ -155,6 +186,8 @@ into `_meta/instance.md` as a policy override instead.
 ---
 
 ## 中文導讀
+
+**加入一個 vault**：裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後，說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫好 `~/.claude/<vault-name>.md` 都由 agent 完成；不用 plugin 的話，上面英文段落有手動四步驟。
 
 日常只有三個動作：
 

@@ -15,6 +15,9 @@ Check, in order:
    imports it from a per-user file (e.g. `@~/.claude/<vault-name>.md`).
 2. Ask the user once, then offer to create that per-user file with the
    `KB_VAULT: /path` line (never write a personal path into a committed file).
+   That file is normally written by `kb-setup` when the user joins the vault, so its
+   absence usually means kb-setup was never run — offer that instead if they have no
+   clone yet.
 
 ## Steps
 

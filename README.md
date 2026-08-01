@@ -82,7 +82,9 @@ CI release job fails with checksum mismatch after a dependency bump.
 1. Create a repo from this template.
 2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — three daily actions, plus
    instance setup (one file to fill in) and how to pull template updates.
-3. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).
+3. Joining a vault that already exists? Install the plugin (below) and say
+   `kb-setup <vault repo URL>` — that is the whole onboarding.
+4. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).
 
 Requirements: git, Python 3 (stdlib only, for `scripts/`),
 [Claude Code](https://claude.com/claude-code) as the primary agent. Other agents work
@@ -90,7 +92,7 @@ through the same rule files in `_meta/`.
 
 ## Using the skills outside a vault
 
-The vault's three skills live in `.claude/skills/` and load automatically when you
+The vault's four skills live in `.claude/skills/` and load automatically when you
 open the vault itself. To get them in *other* repos — so `kb-save` and `kb-search`
 work while you are debugging some project — install this repo as a Claude Code plugin:
 
@@ -99,7 +101,9 @@ work while you are debugging some project — install this repo as a Claude Code
 /plugin install loopkb@loopkb
 ```
 
-They then appear as `/loopkb:kb-save`, `/loopkb:kb-search`, `/loopkb:kb-loop`.
+They then appear as `/loopkb:kb-setup`, `/loopkb:kb-save`, `/loopkb:kb-search`,
+`/loopkb:kb-loop`. Joining an existing vault is then one sentence —
+`kb-setup <vault repo URL>` clones it, validates it, and wires the machine.
 The plugin manifest points straight at `.claude/skills/`, so the vault's skill files
 remain the single source of truth — there is no second copy to drift.
 
