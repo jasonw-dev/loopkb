@@ -258,7 +258,10 @@ Work through this checklist — the instance is ready when every box is checked:
   Dropping `.git` gives the vault a fresh history of its own — the template's provenance
   lives in that first commit message instead. The `upstream` remote is what later merges
   template updates in ("Updating an instance" below); adding it now means you never have
-  to remember where the template came from.
+  to remember where the template came from. Either route (template button or this recipe)
+  leaves your history unrelated to the template's, so the *first* update merge needs
+  `--allow-unrelated-histories` and conflicts by design — "Updating an instance" walks
+  through it.
 - [ ] Fill `_meta/instance.md`: identity (note body language, vault scope), the domain
       tag vocabulary, and any policy overrides. This is the **only** file you fill in —
       every other file is framework-owned, which is what keeps template updates
@@ -314,7 +317,8 @@ violations from ever reaching the weekly loop.
 ## Updating an instance
 
 The framework and the instance own disjoint files, so template updates arrive as an
-ordinary merge:
+ordinary merge — from the second one onward. The first has a one-off wrinkle; read
+"The first merge" below before running this:
 
 ```bash
 git fetch upstream
@@ -325,15 +329,58 @@ git merge upstream/main
 GitHub's "Use this template" has none — add it once with
 `git remote add upstream https://github.com/jasonw-dev/loopkb.git`.)
 
+### The first merge: unrelated histories
+
+The first merge is the awkward one, and it is awkward for **every** instance. Both ways
+of instantiating give the vault a history with no commit in common with the template's —
+GitHub's "Use this template" starts a fresh initial commit, and the clone-and-reinit
+recipe deletes `.git` on purpose (that is the point: the vault owns its history). So the
+command above fails the first time you run it:
+
+```
+fatal: refusing to merge unrelated histories
+```
+
+Say it explicitly, once:
+
+```bash
+git merge upstream/main --allow-unrelated-histories
+```
+
+**Expect conflicts on this first merge — they are the expected outcome, not a failure.**
+With no common ancestor, git cannot tell "you changed it" from "it was always like that",
+so every file present in both trees that differs at all comes back as an add/add conflict
+(`AA` in `git status --short`): every framework file that moved upstream since you
+instantiated, plus the files you own. Resolving them is mechanical rather than a
+judgement call — framework files take upstream, instance-owned files keep yours:
+
+```bash
+git checkout --theirs -- .                           # framework files: upstream wins
+git checkout --ours  -- README.md _meta/instance.md  # yours: README + instance config
+git add -A
+git commit
+```
+
+Two caveats on that recipe. If upstream restructured the `_meta/instance.md` skeleton,
+`--ours` keeps your values and you adopt the new sections by hand before committing. And
+if you deliberately edited a framework file, `--theirs -- .` throws that edit away — which
+is the framework's intended answer (express it as a policy override in
+`_meta/instance.md`); reinstate it by hand only if you really mean to keep the fork.
+
+Once that merge is committed, the two histories are connected. Every later update is the
+plain two-liner above, and behaves as described next.
+
+### Later merges
+
 `_meta/digest.md` is framework-managed but pure run state, and upstream stopped touching
 it after v1.1 — so however many runs have overwritten it in your instance, a template
 merge will not conflict there.
 
-Instance-owned content never conflicts: the template ships `_meta/instance.md` as an
-empty skeleton and nothing else carries instance-specific content. The one case that
-needs hands is when the **skeleton itself** changed upstream (a new section, a renamed
-one): git will report a conflict in `_meta/instance.md` — keep your values, adopt the
-new structure around them, and commit the merge.
+Instance-owned content does not conflict once the histories are joined: the template
+ships `_meta/instance.md` as an empty skeleton and nothing else carries instance-specific
+content. The one case that needs hands is when the **skeleton itself** changed upstream (a
+new section, a renamed one): git will report a conflict in `_meta/instance.md` — keep your
+values, adopt the new structure around them, and commit the merge.
 
 One file changes hands: **`README.md` becomes instance-owned** the moment you rewrite it
 (checklist above). Upstream keeps editing the template README, so that file — and only
@@ -344,9 +391,26 @@ git checkout --ours README.md && git add README.md
 ```
 
 Everything else (CLAUDE.md, `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`,
-`.claude/skills/`, `scripts/`) is framework-owned and stays conflict-free as promised.
-If you edited one of those files locally, the merge will conflict there — that is the
-signal to move the customization into `_meta/instance.md` as a policy override instead.
+`.claude/skills/`, `scripts/`) is framework-owned and stays conflict-free from the second
+merge onward. If you edited one of those files locally, the merge will conflict there —
+that is the signal to move the customization into `_meta/instance.md` as a policy
+override instead.
+
+### Verify after every merge
+
+A template update can change the linter, the schema it enforces, the templates or the
+scripts, so run the framework's own checks before you push the merge — after the first
+merge especially, since you just resolved conflicts by hand:
+
+```bash
+python3 scripts/lint.py                   # the vault still satisfies the schema
+python3 -m unittest discover -s tests     # the framework's scripts still work
+python3 scripts/verify_digest.py          # the digest still accounts for every risky action
+```
+
+All three must exit 0. A failure here is a merge to fix, not a vault to worry about: the
+usual cause is a linter rule that got stricter upstream, and its message names the notes
+to correct.
 
 ---
 
@@ -373,4 +437,4 @@ signal to move the customization into `_meta/instance.md` as a policy override i
 
 **你的修正就是訓練訊號**：agent 分錯了，直接自己搬正、commit 即可（不用特殊格式）；`git revert` 掉 agent 的 commit（`autonomous`）或把 agent 開的 MR 關掉不合併（`reviewed`）同樣算修正訊號。loop 的反省階段會從 git 歷史看到這些修正，改掉分類規則，讓同樣的錯不再發生——同一個被 revert 的動作，除非相關筆記真的變了，否則不會再做一次。
 
-**開新實例**：只需要填 `_meta/instance.md` 一個檔案（語言、範圍、治理模式、領域標籤字彙、政策覆寫）；其餘都是框架檔案，所以之後 `git merge upstream/main` 拉模板更新不會衝突。
+**開新實例**：只需要填 `_meta/instance.md` 一個檔案（語言、範圍、治理模式、領域標籤字彙、政策覆寫）；其餘都是框架檔案，所以之後 `git merge upstream/main` 拉模板更新幾乎不會衝突。唯一的例外是**第一次**：實例的 git 歷史與模板無關，第一次合併要加 `--allow-unrelated-histories`，而且一定會在所有變動過的檔案上產生 add/add 衝突——框架檔案取 upstream（`git checkout --theirs`）、`README.md` 與 `_meta/instance.md` 保留自己的（`git checkout --ours`），commit 之後歷史就接起來了，往後的合併就如上所述。細節見英文段落 "Updating an instance"。

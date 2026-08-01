@@ -6,8 +6,10 @@
 This file is **owned by the instance**. Framework files (`CLAUDE.md`,
 `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`, `.claude/skills/`,
 `scripts/`) never carry instance-specific content, so pulling template updates
-(`git merge upstream/main`, see GETTING-STARTED.md → "Updating an instance")
-never conflicts with what you configure here.
+(`git merge upstream/main`) leaves what you configure here alone. One exception,
+once: an instance's history is unrelated to the template's, so the very first
+merge needs `--allow-unrelated-histories` and conflicts on this file — keep your
+version (`git checkout --ours`). See GETTING-STARTED.md → "Updating an instance".
 
 **Precedence**: policies in this file OVERRIDE the framework defaults in
 `CLAUDE.md`. Agents read `CLAUDE.md` first, then this file.

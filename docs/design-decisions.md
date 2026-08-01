@@ -23,6 +23,13 @@ only a changed *skeleton* needs manual merging. The cost: any customization outs
 `instance.md` will conflict on merge, which is deliberate — it is the signal to
 express the customization as a policy override instead.
 
+*Qualified by practice.* That promise holds from the second merge onward: every instance
+starts with a history unrelated to the template's (both "Use this template" and the
+clone-and-reinit recipe produce fresh history), so the first merge needs
+`--allow-unrelated-histories` and conflicts add/add on every file changed since
+instantiation — a one-off mechanical resolution documented in GETTING-STARTED.md →
+"Updating an instance", not a hole in the file-ownership split.
+
 *Extended by D8.* The instance-owned set grew by one field — the governance mode —
 while the *definitions* of the two modes stay framework-owned (`CLAUDE.md`,
 `_meta/loop.md`). The instance picks; the framework says what the pick means.
