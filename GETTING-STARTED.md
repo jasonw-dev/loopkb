@@ -149,7 +149,21 @@ you need, which is why it must stay meaningful: revert what is actually wrong.
 
 Work through this checklist — the instance is ready when every box is checked:
 
-- [ ] Create a new repo from this template (GitHub "Use this template", or copy the tree).
+- [ ] Create a new repo from this template. On GitHub: "Use this template". On **any
+      other git host** (GitLab, Bitbucket, self-hosted), create an empty repo there
+      first (empty, no README), then:
+  ```bash
+  git clone --depth 1 https://github.com/jasonw-dev/loopkb.git <vault-name>
+  cd <vault-name> && rm -rf .git && git init -b main
+  git add -A && git commit -m "chore: instantiate vault from loopkb template"
+  git remote add origin <your platform's repo URL>
+  git push -u origin main
+  git remote add upstream https://github.com/jasonw-dev/loopkb.git
+  ```
+  Dropping `.git` gives the vault a fresh history of its own — the template's provenance
+  lives in that first commit message instead. The `upstream` remote is what later merges
+  template updates in ("Updating an instance" below); adding it now means you never have
+  to remember where the template came from.
 - [ ] Fill `_meta/instance.md`: identity (note body language, vault scope), the domain
       tag vocabulary, and any policy overrides. This is the **only** file you fill in —
       every other file is framework-owned, which is what keeps template updates
@@ -169,9 +183,16 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] Run `python3 scripts/lint.py` — it must exit 0 on the fresh instance.
 - [ ] Ensure `main` allows direct pushes by members and agents (no branch protection
       blocking them) — every write tier in `autonomous` mode and the additive tier in
-      `reviewed` mode depend on it. If your platform enforces branch protection, you
-      cannot run `autonomous`: use `reviewed`, and route ALL writes through MRs via an
-      instance policy override.
+      `reviewed` mode depend on it. Platform defaults often fight this:
+      **GitLab** protects the default branch on creation and may block all pushes —
+      Settings → Repository → Protected branches, set "Allowed to push and merge" to
+      Developers + Maintainers, and leave force-push off (or do it via the protected
+      branches API).
+      **GitHub** pushes are open by default — just do not add a branch protection or
+      ruleset that blocks them, or add a bypass for the people and agents who push.
+      If your platform enforces branch protection you cannot lift, you cannot run
+      `autonomous`: use `reviewed`, and route ALL writes through MRs via an instance
+      policy override.
 - [ ] Rewrite the README for your instance (the template README describes the framework):
       copy `_meta/README.instance.md` over `README.md` and fill in the blanks. **Keep the
       join block** — the two plugin-install commands plus `kb-setup <your vault URL>` — or
@@ -198,10 +219,13 @@ The framework and the instance own disjoint files, so template updates arrive as
 ordinary merge:
 
 ```bash
-git remote add upstream https://github.com/jasonw-dev/loopkb.git   # once
 git fetch upstream
 git merge upstream/main
 ```
+
+(`upstream` is the remote added when you instantiated the vault. A repo made with
+GitHub's "Use this template" has none — add it once with
+`git remote add upstream https://github.com/jasonw-dev/loopkb.git`.)
 
 Instance-owned content never conflicts: the template ships `_meta/instance.md` as an
 empty skeleton and nothing else carries instance-specific content. The one case that
