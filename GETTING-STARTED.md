@@ -84,7 +84,7 @@ must itemize every risky action in the digest.
 
 Your weekly duty, about two minutes:
 
-1. Open `_meta/digest.md` in Obsidian. Read the header and the **Risky actions**
+1. Open `_meta/digest.md` — in Obsidian, or any Markdown editor. Read the header and the **Risky actions**
    section at the top — it lists every merge, deletion, rename, demotion and rule
    change, each with its commit SHA.
 2. Disagree with one? `git revert <sha>`. That is the whole rejection mechanism —
@@ -160,9 +160,14 @@ Work through this checklist — the instance is ready when every box is checked:
       join block** — the two plugin-install commands plus `kb-setup <your vault URL>` — or
       at minimum link to GETTING-STARTED.md → "Joining a vault". Once the framework README
       is gone, that block is the only place a new teammate finds the way in.
+- [ ] Run `kb-setup <your vault URL>` on your own machine too — creating the vault did
+      not wire this machine. It is what writes the per-user `~/.claude/<vault-name>.md`
+      that every wired project repo imports.
 - [ ] Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
-- [ ] Open the vault in Obsidian once to confirm it reads well.
-- [ ] Tell your teammates how to join: install the plugin, then
+- [ ] *Optional*: open the vault in Obsidian once to confirm it reads well. Obsidian is a
+      human reading UI, nothing more — the vault is fully usable without it.
+- [ ] Grant your teammates write access to the repo — `autonomous` mode needs everyone
+      able to push `main` — then tell them how to join: install the plugin, then
       `kb-setup <your vault repo URL>` (see "Joining a vault" above).
 
 If you run CI, wire `python3 scripts/lint.py` into it — one job per push keeps schema
