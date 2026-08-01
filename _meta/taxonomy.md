@@ -37,9 +37,30 @@ derives it from there, so an instance that adds a type folder adds its template 
   standing behind it. Knowledge enters the vault only when a person deliberately
   contributes it (inbox drop or kb-save). Test data used to exercise the loop must be
   removed when the test ends.
+- **Secrets and personal data** — credentials, API tokens, private keys, passwords,
+  connection strings that embed one, and personal data about identifiable people never
+  enter the vault, in any type folder, at any status. Knowledge *about* a credential is
+  welcome: say **where it lives** (the keychain entry, the secret manager path, the CI
+  variable name) and how it is rotated — never the value itself.
 - **Out of scope** — anything outside the vault scope declared in `_meta/instance.md`.
 - During triage, reject such items: leave them in `_inbox/` with a note pointing to
   where the content should go instead.
+
+**Apparent secrets get a different rejection.** If an inbox item contains what looks
+like a credential, triage does NOT file it and does NOT quietly delete it. Leave the
+item in `_inbox/` with a visible callout:
+
+```
+> [!warning] kb-loop: apparent credential — ROTATE it, then resubmit
+> This item contains what looks like a secret, so it was not filed. Triage commits the
+> original before filing (`_meta/loop.md`, Stage 1), so the value is already in git
+> history: deleting the file is NOT a remedy. Rotate the credential at its source,
+> then re-drop this item with the value removed.
+```
+
+Say the same thing in the digest's "Stuck" section. The commit-first rule makes this
+the only honest response — history rewriting is not something the loop does, and a
+rotated secret is worthless to whoever reads the history later.
 
 ## Domain tags (closed vocabulary)
 

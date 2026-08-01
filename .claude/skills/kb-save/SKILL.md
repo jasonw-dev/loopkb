@@ -26,6 +26,12 @@ Check, in order:
 1. **Extract**: Write the knowledge as a self-contained note — a reader with zero
    conversation context must understand it. Include exact commands, versions,
    error messages. Strip conversational noise.
+   **Strip secrets while extracting**: no credentials, API tokens, private keys,
+   passwords or personal data reach the note — redact them in commands, URLs, config
+   snippets and error output alike. When the knowledge is *about* a credential, say
+   where it lives (keychain entry, secret manager path, CI variable name) and how it is
+   rotated, never the value. See `<vault>/_meta/taxonomy.md` → "What does NOT belong".
+   If the knowledge cannot be written without the secret, do not save it.
 2. **Classify**: Apply the decision rules in `<vault>/_meta/taxonomy.md`. Determine
    type, domains (closed vocabulary in `<vault>/_meta/instance.md` — never invent
    tags), projects.
