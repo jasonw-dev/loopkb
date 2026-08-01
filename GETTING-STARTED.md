@@ -198,6 +198,24 @@ The honest prerequisites, before the YAML:
 - **Give the runner its own identity** via `KB_LOOP_HOLDER` (e.g. `ci-schedule`), so the
   lease messages and the digest header say plainly which runs were unattended.
 
+**The two YAML snippets below are untested skeletons.** They show the shape of the job —
+schedule, full history, install, one sentence — and nothing more: no scheduled loop run
+has been exercised end to end by this project, so treat them as a starting point you will
+debug, not a recipe that works on first push. Three things they deliberately do not solve,
+and you must:
+
+1. **Set the runner's git identity** — `user.name` and `user.email` in its checkout
+   (`git config user.name "kb-loop bot"` and the matching address). This is the *commit*
+   identity, not `KB_LOOP_HOLDER` above, and without it the run's first commit fails
+   mid-run — after the lease was taken.
+2. **Let the headless agent push.** A non-interactive agent still needs permission for git
+   commands; unattended, an approval prompt is a hang, not a question. Grant it up front
+   through your agent's allowlist or permission flags (Claude Code: settings `permissions`
+   / `--allowedTools`), and confirm it can reach `origin` with a credential that may push
+   `main`.
+3. **Fund an API key.** A headless run costs real money and a schedule makes it recurring,
+   as the list above says — verify the key works non-interactively before trusting a cron.
+
 GitHub Actions, weekly:
 
 ```yaml
@@ -243,7 +261,9 @@ kb-loop:
 
 **Lint in CI** is far cheaper than automating the loop and worth it either way — it
 catches schema violations at push time instead of at the weekly run. This repo ships
-`.github/workflows/lint.yml`, which works unchanged for any GitHub-hosted instance. There
+`.github/workflows/lint.yml`, which works unchanged for any GitHub-hosted instance — and
+unlike the skeletons above it is not untested: it runs on this repository on every push.
+There
 is deliberately no root `.gitlab-ci.yml`: that file would switch CI on for every instance
 the moment it merged a template update, so GitLab instances opt in by pasting this:
 
