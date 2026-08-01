@@ -20,6 +20,20 @@ A note has exactly ONE type. The type decides the folder and the template
 
 If none of these fit confidently, the item stays in `_inbox/` with a note explaining why.
 
+## What does NOT belong in this vault
+
+- **Repo-local facts** — anything a single repo's own files or docs define (versions,
+  build config, internal quirks of that repo). Those belong in that repo's README /
+  CLAUDE.md / an MR fixing the root cause. The vault records knowledge that spans
+  repos, processes, or environments — and *where the source of truth lives*, never a
+  copy of the truth itself (copies rot).
+  - Pragmatic exception: an unfixed, undocumented trap in a repo that keeps biting
+    people MAY live here as `troubleshooting` with an explicit "root fix pending"
+    line — the loop retires it once the root fix lands.
+- **Machine-local setup** — personal tooling choices not adopted by the team.
+- During triage, reject such items: leave them in `_inbox/` with a note pointing to
+  where the content should go instead.
+
 ## Domain tags (closed vocabulary)
 
 `domains:` may ONLY use values from this list. Adding a value requires a
