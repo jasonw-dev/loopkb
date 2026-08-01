@@ -226,6 +226,10 @@ framework README deletes the very instructions that make onboarding one sentence
 template also ships `_meta/README.instance.md`, a stub that carries the join block through
 the rewrite.
 
+*Extended in passing.* The visual intro both READMEs open with now ships as
+`docs/explainer.html` on GitHub Pages instead of a private artifact link, so the
+first-contact path is versioned with the framework and reviewable in the same diffs.
+
 ## D10 — Mechanical verification of what the framework promises
 
 **Context.** D8 made the digest load-bearing: in `autonomous` mode an unreported risky
