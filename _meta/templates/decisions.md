@@ -3,7 +3,7 @@ type: decisions
 domains: []
 projects: []
 created: YYYY-MM-DD
-source: conversation
+source: <inbox|conversation|meeting>
 status: raw
 ---
 

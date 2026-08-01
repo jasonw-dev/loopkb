@@ -1,6 +1,6 @@
 {
   "newLinkFormat": "shortest",
   "useMarkdownLinks": false,
-  "attachmentFolderPath": "_meta/attachments",
+  "attachmentFolderPath": "_attachments",
   "alwaysUpdateLinks": true
 }

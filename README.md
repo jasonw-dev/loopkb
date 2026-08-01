@@ -33,9 +33,42 @@ appends to:
 - **Write tiers.** Additive operations commit straight to main; destructive ones
   (merge, delete, move, rule changes) go through MRs a human reviews.
 
+## What it looks like
+
+```
+vault/
+├── _inbox/            ← drop anything here; the loop classifies it
+├── _meta/             ← taxonomy, loop spec, note templates
+├── troubleshooting/   ← symptom → cause → fix
+├── decisions/         ← lightweight ADRs
+├── guides/            ← how-to
+├── references/        ← external material, summarized
+└── meetings/
+```
+
+A filed note:
+
+```markdown
+---
+type: troubleshooting
+domains: [ci-cd]
+created: 2026-08-01
+source: inbox
+status: curated
+---
+# Release build fails on stale cache
+
+## Symptom
+CI release job fails with checksum mismatch after a dependency bump.
+
+## Cause / ## Fix / ## Related
+…
+```
+
 ## Quick start
 
-1. Create a repo from this template.
+1. Create a repo from this template (maintainers: keep the repo marked as a
+   Template repository in GitHub settings).
 2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — three daily actions, plus
    instance setup.
 3. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).

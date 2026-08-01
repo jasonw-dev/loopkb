@@ -1,6 +1,6 @@
 ---
 name: kb-search
-description: Use when solving a problem that the team may have hit before — build/environment/dependency errors, tooling setup, release procedures — or when explicitly asked to search the knowledge base ("kb-search", "查知識庫").
+description: Use when solving a problem that the team may have hit before — build/environment/dependency errors, tooling setup, release procedures — or when explicitly asked to search the knowledge base ("kb-search").
 ---
 
 # kb-search
@@ -38,7 +38,10 @@ Team knowledge base: <vault repo URL>
 The import above loads the per-user KB_VAULT setting. If undefined, ask the user
 for their clone path and offer to create ~/.claude/<vault-name>.md with a
 `KB_VAULT: /path` line.
-On build/environment/dependency problems, search the knowledge base first (kb-search skill in the vault's .claude/skills/).
+The kb-save / kb-search / kb-loop procedures are defined in
+`<KB_VAULT>/.claude/skills/<name>/SKILL.md` — read the relevant file before acting.
+On build/environment/dependency problems, search the knowledge base first (kb-search).
+After solving a non-trivial problem worth sharing, save it with kb-save.
 ```
 
 Each person creates `~/.claude/<vault-name>.md` once — every repo wired to the same

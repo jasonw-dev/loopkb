@@ -48,13 +48,19 @@ stops happening. Your corrections ARE the training signal.
 
 ## Starting a new instance from this template
 
-1. Create a new repo from this template (GitHub "Use this template", or copy the tree).
-2. Fill the instance header and tag vocabulary in `_meta/taxonomy.md`.
-3. Adjust instance policy in `CLAUDE.md` below the `INSTANCE OVERRIDES` marker
-   (e.g. stricter MR rules during a trial period; solo vaults: MRs become
-   "commit to a branch, self-review the diff, merge").
-4. Add/remove type folders if the domain calls for it (e.g. a personal vault may add `journal/`).
-5. Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
+Work through this checklist — the instance is ready when every box is checked:
+
+- [ ] Create a new repo from this template (GitHub "Use this template", or copy the tree).
+- [ ] Fill the instance header (body language, vault scope) at the top of `_meta/taxonomy.md`.
+- [ ] Fill the domain tag vocabulary in `_meta/taxonomy.md` — the loop refuses to
+      run while it is empty.
+- [ ] Adjust instance policy in `CLAUDE.md` below the `INSTANCE OVERRIDES` marker
+      (e.g. stricter MR rules during a trial period; solo vaults: MRs become
+      "commit to a branch, self-review the diff, merge").
+- [ ] Add/remove type folders if the domain calls for it (e.g. a personal vault may
+      add `journal/`) — update `_meta/taxonomy.md` and `_meta/templates/` to match.
+- [ ] Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
+- [ ] Open the vault in Obsidian once to confirm it reads well.
 
 ---
 

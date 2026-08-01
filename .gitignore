@@ -1,8 +1,6 @@
-# Obsidian personal state (shared config like app.json IS committed)
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/graph.json
-.obsidian/cache/
+# Obsidian: ignore everything auto-generated; only shared config is committed
+.obsidian/*
+!.obsidian/app.json
 
 # OS
 .DS_Store

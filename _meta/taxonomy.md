@@ -65,6 +65,8 @@ actual repo names (verifiable), not free text.
 
 - Filenames: English, kebab-case, descriptive, unique across the entire vault.
   Good: `flutter-ios-codesign-fastlane.md`. Bad: `note1.md`, `iOS問題.md`.
+- `meetings/` filenames start with the date: `YYYY-MM-DD-<topic>.md` — recurring
+  meetings would otherwise collide with the uniqueness rule.
 - A rename counts as a destructive operation (breaks inbound links until updated) → MR channel.
 
 ## Source field
@@ -79,5 +81,6 @@ record — regardless of whether it arrived via inbox or kb-save).
 - `curated` — links, tags, and formatting verified; connected to related notes.
 - `evergreen` — distilled, possibly merged from several notes; safe to trust long-term.
 
-Promotion is done by the loop (refine stage) or by humans. Demotion (evergreen → curated)
-is allowed when content is found stale — record why in the commit message.
+Promotion is done by the loop (refine stage) or by humans. Demotion (any single step
+down the ladder) is allowed when content is found stale or wrong — record why in the
+commit message.

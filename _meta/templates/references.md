@@ -3,7 +3,7 @@ type: references
 domains: []
 projects: []
 created: YYYY-MM-DD
-source: inbox
+source: <inbox|conversation|meeting>
 status: raw
 ---
 

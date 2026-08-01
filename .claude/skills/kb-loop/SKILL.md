@@ -1,6 +1,6 @@
 ---
 name: kb-loop
-description: Use when asked to run the knowledge-base maintenance loop ("kb-loop", "跑 loop", "run the loop") inside a loopkb vault. Executes triage → refine → reflect → lint per _meta/loop.md.
+description: Use when asked to run the knowledge-base maintenance loop ("kb-loop", "run the loop") inside a loopkb vault. Executes triage → refine → reflect → lint per _meta/loop.md.
 ---
 
 # kb-loop
@@ -12,9 +12,11 @@ Run the maintenance loop. You MUST be inside the vault repo.
 1. Read `CLAUDE.md` (write tiers, guardrails, instance overrides), `_meta/taxonomy.md`,
    and `_meta/loop.md` in full. `_meta/loop.md` is the pipeline spec — this skill only
    orchestrates it.
-2. `git status` — if there are uncommitted changes outside `_inbox/`, STOP and ask the
+2. If the domain tag vocabulary in `_meta/taxonomy.md` is empty, STOP and tell the
+   user to fill it first — triage cannot classify against an empty vocabulary.
+3. `git status` — if there are uncommitted changes outside `_inbox/`, STOP and ask the
    user; that is someone's work in progress.
-3. `git pull --rebase`.
+4. `git pull --rebase`.
 
 ## Execute
 

@@ -1,6 +1,6 @@
 ---
 name: kb-save
-description: Use when the user wants to save knowledge from the current conversation into the loopkb vault — "save this to the knowledge base", "kb-save", "把這個存進知識庫". Extracts the knowledge, classifies it, and files it (or inboxes it when unsure).
+description: Use when the user wants to save knowledge from the current conversation into the loopkb vault — "save this to the knowledge base", "kb-save". Extracts the knowledge, classifies it, and files it (or inboxes it when unsure).
 ---
 
 # kb-save
@@ -9,7 +9,8 @@ Save knowledge from the current conversation into the vault.
 
 ## Locate the vault
 
-The vault path is personal machine configuration. Check, in order:
+Check, in order:
+0. If the current repo IS a loopkb vault (it contains `_meta/loop.md`), use it directly.
 1. The `KB_VAULT` line already in your loaded context — wired projects' CLAUDE.md
    imports it from a per-user file (e.g. `@~/.claude/<vault-name>.md`).
 2. Ask the user once, then offer to create that per-user file with the
@@ -32,12 +33,13 @@ The vault path is personal machine configuration. Check, in order:
      stating what is unclear. The loop will handle it.
 4. **Commit and push** (in the vault):
    ```
-   git pull --rebase
+   git pull --rebase --autostash
    git add <file> && git commit -m "[kb-save] <type>: <title>"
    git push
    ```
-   If push fails on network (vault remote unreachable), commit locally and tell the
-   user push is pending.
+   If the rebase hits conflicts: abort it, commit the new note locally, and tell the
+   user sync is pending. If push fails on network (vault remote unreachable), commit
+   locally and tell the user push is pending.
 
 ## Rules
 
