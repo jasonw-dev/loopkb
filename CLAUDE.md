@@ -97,11 +97,10 @@ the human merging it is the human conferring the status. In `autonomous` mode th
 same distillation lands as a `curated` note by direct commit, and the agent nominates
 it for `evergreen` in the digest — an agent never writes `evergreen` itself.
 
-**MR fallback** (`reviewed` mode only): in a repo without an MR/PR platform, the MR
-channel degrades to: commit on a branch `kb-loop/<topic>-<YYYYMMDD>`, have the human
-review the diff locally (`git diff main...`), then merge. The review step never
-disappears. In `autonomous` mode there is no MR channel to degrade — a vault with no
-platform is exactly what that mode is built for.
+**`reviewed` mode requires an MR platform** (`gh`, `glab`, or the platform's API) —
+name it in `_meta/instance.md` → Policy overrides. There is no platform-less variant of
+it: a vault with no MR platform runs `autonomous`, which is the mode built for exactly
+that case and asks nothing of a platform at any point.
 
 ## The run digest
 

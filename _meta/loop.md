@@ -173,11 +173,13 @@ Nothing distinguishes a revert of a merge from a revert of a rename: the rule is
 per-action. Re-attempting a reverted action without new evidence is the single worst
 failure mode of `autonomous` mode, because it costs the human the same revert twice.
 
-**Platform unavailable** (`reviewed` mode, offline or no MR platform): degrade to
-git-only signals. A `kb-loop/*` branch that was deleted locally without ever being
-merged into `main` approximates a rejection; treat it as signal 2. Say in the digest
-that the run was git-only. In `autonomous` mode this degradation never applies —
-there is no platform in the loop to be unavailable.
+**Platform unreachable** (`reviewed` mode, offline or the API is down): run on signal 1
+alone, take no rejection signal from guesswork, and say in the digest that the run was
+git-only so the human knows the closed-MR half was not read. Do **not** infer rejections
+from branch state: a deleted `kb-loop/*` branch is as likely to be hygiene after a merge
+as a rejection, and a wrong rejection is permanent — it suppresses a correct action
+forever. Wait for the platform instead. In `autonomous` mode none of this applies: the
+rejection signal is `git revert`, which is always available.
 
 ### Analysis
 

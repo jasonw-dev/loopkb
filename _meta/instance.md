@@ -100,7 +100,8 @@ value must be a real repo name (verifiable), not free text.
 Framework defaults apply unless overridden here. Delete the ones you do not need.
 
 - **MR platform** (`reviewed` mode only; ignored in `autonomous`): <e.g. GitHub pull
-  requests via `gh` · GitLab MRs via `glab` · none — use the MR fallback in CLAUDE.md>
+  requests via `gh` · GitLab MRs via `glab`. `reviewed` mode needs one — with no MR
+  platform, run `autonomous`.>
 - **Write tiers**: <e.g. defaults for the declared mode apply · or, in `reviewed`
   mode during a trial period: ALL refine operations go through MRs, including
   link/tag/format edits>
