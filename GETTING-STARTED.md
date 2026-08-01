@@ -164,7 +164,7 @@ Work through this checklist — the instance is ready when every box is checked:
 
 - [ ] Create a new repo from this template. On GitHub: "Use this template". On **any
       other git host** (GitLab, Bitbucket, self-hosted), create an empty repo there
-      first (empty, no README), then:
+      first — no README, no initial commit — then:
   ```bash
   git clone --depth 1 https://github.com/jasonw-dev/loopkb.git <vault-name>
   cd <vault-name> && rm -rf .git && git init -b main
