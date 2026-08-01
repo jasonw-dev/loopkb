@@ -13,18 +13,24 @@ There are exactly two jobs around a vault, and most people only ever do the seco
 `_meta/instance.md`, grant your teammates write access, and share the vault URL.
 See "Starting a new instance (creator, once per team)" below.
 
-**Member** — once per machine. Install the plugin and run `kb-setup <vault URL>`.
-See "Joining a vault (member, once per machine)" right below.
+**Member** — once per machine. Install your agent's entry points and run
+`kb-setup <vault URL>`. There is a path for Claude Code, one for Codex CLI, and a manual
+one for any other agent — see "Joining a vault (member, once per machine)" right below.
 
 The creator is also a member: creating the vault does not wire your own machine, so you
 run `kb-setup` too.
 
 ## Joining a vault (member, once per machine)
 
-You never run `git clone` yourself: the plugin machinery fetches the skills, and
-`kb-setup` clones the vault for you.
+Pick the path for the agent you use. All three end in the same place: a vault clone, and
+a `~/.claude/<vault-name>.md` file holding one `KB_VAULT: <path>` line — the per-user
+wiring every agent reads. The procedures themselves live in the vault
+(`.claude/skills/*/SKILL.md`) and are agent-agnostic; only the way you *reach* them differs.
 
-In Claude Code, install the plugin and say one sentence:
+### Claude Code
+
+You never run `git clone` yourself: the plugin machinery fetches the skills, and
+`kb-setup` clones the vault for you. Install the plugin and say one sentence:
 
 ```
 /plugin marketplace add jasonw-dev/loopkb
@@ -39,22 +45,54 @@ kb-setup https://github.com/<org>/<vault-repo>.git
 the linter, and writes the per-user `~/.claude/<vault-name>.md` file that every wired
 project repo imports. Then it tells you the three actions below. Nothing else to do.
 
-<details>
-<summary>Without the plugin — the same four steps by hand</summary>
+### Codex CLI
+
+You never clone the vault yourself here either — you do install four small files first.
+Copy the pointer skills into Codex's personal skills directory, then say one sentence:
+
+```bash
+mkdir -p ~/.agents/skills
+for s in kb-setup kb-save kb-search kb-loop; do
+  mkdir -p ~/.agents/skills/$s
+  curl -fsSL -o ~/.agents/skills/$s/SKILL.md \
+    https://raw.githubusercontent.com/jasonw-dev/loopkb/main/integrations/codex/skills/$s/SKILL.md
+done
+```
+
+```
+$kb-setup https://github.com/<org>/<vault-repo>.git
+```
+
+Each of those files is a dozen lines that resolve the vault and then read the real
+procedure out of it, so nothing is duplicated and nothing drifts. Codex's default sandbox
+denies network access, so it will ask for approval when `kb-setup` clones — expect the
+same at every later push and pull. Details, the optional global `AGENTS.md` snippet and
+the deprecated custom-prompts variant: [`integrations/codex/README.md`](integrations/codex/README.md).
+
+### Any other agent
+
+Four steps by hand — and yes, this path really does clone the vault yourself, because
+there is no packaging mechanism to do it for you:
 
 1. `git clone <vault repo URL> <dest>` — any path you like.
 2. Create `~/.claude/<vault-name>.md` with a single line: `KB_VAULT: <dest>`.
-   (Per-user file, never committed: it is why a personal path stays out of git.)
+   (Per-user file, never committed: it is why a personal path stays out of git.
+   `<vault-name>` is the repo basename without `.git`.)
 3. Verify the clone: `python3 <dest>/scripts/lint.py` must exit 0.
-4. Wire each project repo whose agents should search the vault — see
-   "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
+4. Point the agent at the vault: it starts at `<dest>/AGENTS.md` → `<dest>/CLAUDE.md`, and
+   the four procedures are `<dest>/.claude/skills/<name>/SKILL.md` — say "read
+   `<dest>/.claude/skills/kb-save/SKILL.md` and follow it" and it works. To wire a project
+   repo so its agents do this on their own, see "Wiring a project repo" in
+   `.claude/skills/kb-search/SKILL.md`.
 
-</details>
+This is also the fallback for Claude Code or Codex when you would rather not install
+anything.
 
 ### Multiple vaults on one machine
 
-Fully supported. The plugin is installed once and serves every vault; run `kb-setup`
-once per vault. Each vault gets its own `~/.claude/<vault-name>.md`, and each wired
+Fully supported. The entry points — plugin or Codex skills — are installed once and serve
+every vault; run `kb-setup` once per vault. Each vault gets its own
+`~/.claude/<vault-name>.md`, and each wired
 project repo imports the file of the vault it belongs to — so a repo can point at the
 team vault while another points at your personal one.
 
@@ -307,9 +345,9 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] *Optional*: open the vault in Obsidian once to confirm it reads well. Obsidian is a
       human reading UI, nothing more — the vault is fully usable without it.
 - [ ] Grant your teammates write access to the repo — `autonomous` mode needs everyone
-      able to push `main` — then tell them how to join: install the plugin, then
-      `kb-setup <your vault repo URL>` (see "Joining a vault (member, once per machine)"
-      above).
+      able to push `main` — then tell them how to join: install their agent's entry points,
+      then `kb-setup <your vault repo URL>`. Send them "Joining a vault (member, once per
+      machine)" above; it has a path for Claude Code, Codex CLI and any other agent.
 
 If you run CI, wire `python3 scripts/lint.py` into it — one job per push keeps schema
 violations from ever reaching the weekly loop.
@@ -418,7 +456,9 @@ to correct.
 
 **兩種角色**：**建立者**（每個團隊一次：從 template 開新 repo、填 `_meta/instance.md`、給團隊成員權限、把 vault URL 發出去）與**成員**（每台機器一次：裝 plugin、跑 `kb-setup <vault URL>`）。建立者自己也是成員——建好 vault 不等於這台機器已經接好。
 
-**加入一個 vault**：你不用自己 `git clone`——plugin 機制會抓 skills，vault 由 `kb-setup` 幫你 clone。裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後，說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫好 `~/.claude/<vault-name>.md` 都由 agent 完成；不用 plugin 的話，上面英文段落有手動四步驟。
+**加入一個 vault**：三條路徑，終點相同（一份 vault clone + `~/.claude/<vault-name>.md` 裡的 `KB_VAULT:` 一行）。**Claude Code**：你不用自己 `git clone`——裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫檔都由 agent 完成。**Codex CLI**：先把 `integrations/codex/skills/` 底下四個指標檔複製到 `~/.agents/skills/`，再說 `$kb-setup <vault URL>`（Codex 預設沙箱擋網路，clone/push 時會跳出授權請求）。**其他 agent**：上面英文段落有手動四步驟——這條路徑確實要你自己 clone。
+
+**跨平台**：真正的操作程序只有一份，就在 vault 的 `.claude/skills/*/SKILL.md`；各平台的整合檔只是幾行的指標，負責找到 vault 再去讀那一份，所以不會有第二份會走鐘的副本。
 
 日常只有三個動作：
 

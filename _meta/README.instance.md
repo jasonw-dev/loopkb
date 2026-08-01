@@ -14,23 +14,22 @@ and maintains them; git is the sync, review and undo layer.">
 
 ## Joining this vault (once per machine)
 
-You never run `git clone` yourself: the plugin machinery fetches the skills, and
-`kb-setup` clones the vault for you.
+Install your agent's entry points, then say one sentence — `kb-setup <vault URL>` — and
+it clones the vault, validates it, and wires this machine. Nothing else to do.
 
-In Claude Code, install the plugin:
+**Claude Code** — install the plugin (you never `git clone` anything yourself):
 
 ```
 /plugin marketplace add jasonw-dev/loopkb
 /plugin install loopkb@loopkb
 ```
 
-then say one sentence:
+**Codex CLI** — copy the four pointer skills into `~/.agents/skills/`, then `$kb-setup`;
+steps and the sandbox notes are in [`integrations/codex/README.md`](integrations/codex/README.md).
 
-```
-kb-setup <vault URL>
-```
-
-That clones the vault, validates it, and wires this machine. Nothing else to do.
+**Any other agent** — the manual path (clone, write `~/.claude/<vault-name>.md`, point the
+agent at [AGENTS.md](AGENTS.md)) is in [GETTING-STARTED.md](GETTING-STARTED.md) →
+"Joining a vault (member, once per machine)".
 
 ## Daily use
 
