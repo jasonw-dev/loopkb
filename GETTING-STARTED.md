@@ -101,6 +101,11 @@ interface to the loop. See "Reviewing the loop's work" below.
 Only one loop run happens at a time — the run takes a lease (`scripts/lease.py`) on a
 `kb-loop-lock` branch, so a second run started elsewhere stops instead of colliding.
 
+Order of magnitude, so you can plan: one run touches about ten notes and takes minutes
+of agent time (and the matching API cost). It is a weekly-coffee-break operation, not a
+background daemon — a vault with hundreds of pending notes is drained over several runs,
+by design.
+
 ## Reviewing the loop's work
 
 The vault runs in one of two **governance modes**, set in `_meta/instance.md` →
@@ -194,6 +199,9 @@ Work through this checklist — the instance is ready when every box is checked:
       add `journal/`) — add the matching `_meta/templates/<type>.md`, since the linter
       derives the type-folder set from the templates.
 - [ ] Run `python3 scripts/lint.py` — it must exit 0 on the fresh instance.
+      *(Maintainer note: `python3 -m unittest discover -s tests` runs the framework's own
+      stdlib test suite — every linter rule, the lease's compare-and-swap, and the digest
+      verifier. Run it whenever you touch anything under `scripts/`; CI runs both.)*
 - [ ] Ensure `main` allows direct pushes by members and agents (no branch protection
       blocking them) — every write tier in `autonomous` mode and the additive tier in
       `reviewed` mode depend on it. Platform defaults often fight this:
@@ -239,6 +247,10 @@ git merge upstream/main
 (`upstream` is the remote added when you instantiated the vault. A repo made with
 GitHub's "Use this template" has none — add it once with
 `git remote add upstream https://github.com/jasonw-dev/loopkb.git`.)
+
+`_meta/digest.md` is framework-managed but pure run state, and upstream stopped touching
+it after v1.1 — so however many runs have overwritten it in your instance, a template
+merge will not conflict there.
 
 Instance-owned content never conflicts: the template ships `_meta/instance.md` as an
 empty skeleton and nothing else carries instance-specific content. The one case that

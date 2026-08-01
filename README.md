@@ -23,6 +23,9 @@ appends to:
   those corrections and changes the classification rules. The taxonomy learns.
 - **Executable schema** — `scripts/lint.py` (stdlib-only Python 3) is the definition
   of what a valid note is, so "is the vault healthy?" has a deterministic answer.
+- **Checked audit trail** — the run report is not taken on trust:
+  `scripts/verify_digest.py` re-derives every risky action (deletion, rename, rule
+  change, demotion) from git and fails the run if the digest does not name it.
 
 ## Architecture
 
@@ -53,6 +56,7 @@ vault/
 ├── _inbox/            ← drop anything here; the loop classifies it
 ├── _meta/             ← instance config, taxonomy, loop spec, note templates
 ├── scripts/           ← lint.py (schema check) · lease.py (one loop run at a time)
+│                        verify_digest.py (the digest itemizes every risky action)
 ├── troubleshooting/   ← symptom → cause → fix
 ├── decisions/         ← lightweight ADRs
 ├── guides/            ← how-to
@@ -112,10 +116,28 @@ They then appear as `/loopkb:kb-setup`, `/loopkb:kb-save`, `/loopkb:kb-search`,
 The plugin manifest points straight at `.claude/skills/`, so the vault's skill files
 remain the single source of truth — there is no second copy to drift.
 
+Inside a vault both sets are live at once — the plugin's `loopkb:kb-*` skills and the
+vault-local ones from `.claude/skills/`. That is by design and harmless: they resolve to
+the same files, so either name does the same thing, and a vault opened without the
+plugin still has everything it needs.
+
 ## Design
 
 The reasoning behind the framework's load-bearing choices is recorded in
 [docs/design-decisions.md](docs/design-decisions.md).
+
+## Development
+
+Two commands gate every change, and CI (`.github/workflows/lint.yml`) runs both:
+
+```
+python3 scripts/lint.py                    # the vault schema — must exit 0
+python3 -m unittest discover -s tests      # the framework's own suite
+```
+
+The suite is stdlib `unittest` with no fixtures on disk: it builds throwaway vaults and
+real git repos in temp directories to cover every linter rule, the lease's
+compare-and-swap against a bare remote with two clones, and the digest verifier.
 
 ## License
 
