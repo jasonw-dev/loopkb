@@ -110,6 +110,41 @@ class VerifyDigestTest(TempDirTestCase):
         sha = self.commit("[kb-loop] refine: demote alpha-note — commands no longer accurate")
         self.assert_missing(sha, because="demoted guides/alpha-note.md: curated -> raw")
 
+    def test_a_deleted_files_status_is_not_charged_to_another_file(self) -> None:
+        """`+++ /dev/null` must reset the current-file tracker.
+
+        Without the reset, the deleted file's `-status:` line is attributed to
+        whichever file preceded it in the diff, and pairs with that file's `+status:`
+        into a demotion of a note nobody demoted — a wrong SHA for the human to revert.
+        """
+        write(
+            self.vault / "guides" / "gamma-note.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\nsource: inbox\n"
+            "---\n# Gamma\n\n- [[alpha-note]]\n",
+        )
+        write(
+            self.vault / "troubleshooting" / "old-note.md",
+            "---\ntype: troubleshooting\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: curated\n---\n# Old\n\n- [[alpha-note]]\n",
+        )
+        self.commit("[kb-loop] triage: file gamma-note and old-note")
+
+        # One commit: fill the missing `status:` on gamma (additive) and delete the
+        # curated old-note (risky). `guides/` sorts before `troubleshooting/`.
+        write(
+            self.vault / "guides" / "gamma-note.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\nsource: inbox\n"
+            "status: raw\n---\n# Gamma\n\n- [[alpha-note]]\n",
+        )
+        (self.vault / "troubleshooting" / "old-note.md").unlink()
+        sha = self.commit("[kb-loop] refine: merge old-note into gamma-note")
+
+        proc = self.verify()
+        self.assertEqual(proc.returncode, 1, proc.output)
+        self.assertIn(f"missing from digest: {self.short(sha)}", proc.output)
+        self.assertIn("deleted troubleshooting/old-note.md", proc.output)
+        self.assertNotIn("demoted", proc.output)
+
     # --- the digest satisfies the check ------------------------------------- #
 
     def test_itemizing_the_short_sha_satisfies_the_check(self) -> None:

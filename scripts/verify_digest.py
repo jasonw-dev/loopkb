@@ -105,14 +105,17 @@ def status_demotions(repo: Path, sha: str) -> list[tuple[str, str, str]]:
     added: dict[str, list[str]] = {}
     current = ""
     for line in out.splitlines():
-        file_match = DIFF_FILE_RE.match(line)
-        if file_match:
-            current = file_match.group(1)
+        if line.startswith("+++"):
+            # `+++ /dev/null` means this hunk's file is being deleted: reset the tracker
+            # rather than leaving the previous file's name in it, or the deleted file's
+            # `-status:` lines get attributed to whichever file came before it.
+            file_match = DIFF_FILE_RE.match(line)
+            current = file_match.group(1) if file_match else ""
             continue
-        if line.startswith("---") or line.startswith("+++"):
+        if line.startswith("---"):
             continue
         match = STATUS_DIFF_RE.match(line)
-        if not match:
+        if not match or not current:
             continue
         bucket = removed if match.group(1) == "-" else added
         bucket.setdefault(current, []).append(match.group(2).strip().strip("\"'"))
