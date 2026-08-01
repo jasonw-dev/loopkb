@@ -10,10 +10,10 @@ Save knowledge from the current conversation into the vault.
 ## Locate the vault
 
 The vault path is personal machine configuration. Check, in order:
-1. The `KB_VAULT` line in the project's `CLAUDE.local.md` (or CLAUDE.md) — the
-   committed CLAUDE.md carries the vault's repo URL; the local path lives in
-   `CLAUDE.local.md`, which is never committed.
-2. Ask the user once, then offer to write the path into `CLAUDE.local.md`.
+1. The `KB_VAULT` line already in your loaded context — wired projects' CLAUDE.md
+   imports it from a per-user file (e.g. `@~/.claude/<vault-name>.md`).
+2. Ask the user once, then offer to create that per-user file with the
+   `KB_VAULT: /path` line (never write a personal path into a committed file).
 
 ## Steps
 

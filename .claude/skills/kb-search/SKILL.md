@@ -9,8 +9,8 @@ Search the team knowledge base before re-deriving a solution from scratch.
 
 ## Locate the vault
 
-Same resolution as kb-save: `KB_VAULT` line in the project's `CLAUDE.local.md`
-(or CLAUDE.md), else ask once and offer to persist it in `CLAUDE.local.md`.
+Same resolution as kb-save: the `KB_VAULT` line in your loaded context (imported
+from the per-user file), else ask once and offer to create that file.
 If the vault clone is missing or stale, `git -C <vault> pull` first (skip on network failure — search the local copy).
 
 ## Steps
@@ -32,10 +32,14 @@ Add to the project's **committed** CLAUDE.md (team facts only — never a person
 ```
 ## Knowledge base
 Team knowledge base: <vault repo URL>
-KB_VAULT (your local clone path) lives in CLAUDE.local.md, not committed.
-If undefined, ask the user and offer to write it into CLAUDE.local.md.
+
+@~/.claude/<vault-name>.md
+
+The import above loads the per-user KB_VAULT setting. If undefined, ask the user
+for their clone path and offer to create ~/.claude/<vault-name>.md with a
+`KB_VAULT: /path` line.
 On build/environment/dependency problems, search the knowledge base first (kb-search skill in the vault's .claude/skills/).
 ```
 
-Each person then puts `KB_VAULT: /their/path` in their own `CLAUDE.local.md`
-(ensure it is git-ignored — `.git/info/exclude` works without touching the repo).
+Each person creates `~/.claude/<vault-name>.md` once — every repo wired to the same
+vault imports the same file, so the path is configured a single time per machine.
