@@ -187,6 +187,11 @@ revertable commit (a merge deletes originals and retargets links in the same com
 and it makes `autonomous` unusable where branch protection forbids direct pushes to
 `main`, which is exactly when an instance should pick `reviewed`.
 
+*Hardened by D10: digest completeness is now machine-checked.* The load-bearing promise
+of this decision — every risky action appears in the digest — stopped being a promise:
+`scripts/verify_digest.py` re-derives the risky actions from git and fails the run when
+one has no digest line.
+
 ## D9 — Onboarding is a skill, not a checklist
 
 **Context.** Joining a vault took four manual steps — clone it, hand-write
@@ -209,3 +214,48 @@ review found the gap on the other side of this decision — an instance that rew
 framework README deletes the very instructions that make onboarding one sentence — so the
 template also ships `_meta/README.instance.md`, a stub that carries the join block through
 the rewrite.
+
+## D10 — Mechanical verification of what the framework promises
+
+**Context.** D8 made the digest load-bearing: in `autonomous` mode an unreported risky
+action is invisible, so the human's revert-based control depends entirely on the agent
+having itemized everything. That promise lived in prose, and prose is exactly what an
+agent under budget pressure summarizes away. Two other promises had the same shape. The
+lease claimed mutual exclusion but implemented check-then-force-push: two machines could
+each read "free", each push, and the later force-push would silently steal a lock the
+other run believed it held. And the linter — the framework's one deterministic check —
+had no tests, so every rule in it was a rule that could regress unnoticed.
+
+**Decision.** Turn each promise into something a machine checks.
+
+- **`scripts/verify_digest.py`** re-derives the run's risky actions from git — deletions
+  and renames under the type folders, `_meta/` changes other than the digest itself, and
+  `status:` demotions — over the agent commits since the previous report commit, and
+  exits 1 naming any whose short SHA is absent from `_meta/digest.md`. The loop therefore
+  writes the digest, verifies, and only then makes the report commit; digest lines carry
+  short SHAs as a mechanical requirement rather than a convenience. In `reviewed` mode the
+  same script doubles as a tripwire: a risky agent commit sitting on `main` there means
+  something bypassed the MR channel.
+- **The lease becomes a real compare-and-swap.** Taking a free lock pushes without
+  `--force`, so git's own non-fast-forward rejection is the atomic test; stale takeover
+  and refresh push with `--force-with-lease=<ref>:<sha we read>`. A session id in the lock
+  closes the last hole, where two terminals sharing a holder name each "refreshed" their
+  way into a concurrent run.
+- **A stdlib `unittest` suite** (`python3 -m unittest discover -s tests`) covers every
+  violation class the linter knows, the lease against a real bare remote with two clones,
+  and the verifier's window and detection rules. It runs in CI alongside the linter.
+
+Two smaller items ride along, both content policy rather than mechanism: secrets and
+personal data are named as content that never enters the vault, with rotation — not
+deletion — as the remedy, since the commit-first rule has already written the value into
+history; and the linter warns (without failing) about notes in folders the schema cannot
+see.
+
+**Consequence.** The framework's three guarantees — the digest is complete, one run at a
+time, a note is valid — are now checkable rather than asserted, and a regression in any
+of them shows up as a failing exit code instead of as a quiet loss of trust months later.
+The cost is that the loop has one more mandatory step before its report commit, that the
+lease is slightly less forgiving (a run whose process died is cleared by `release` or the
+TTL, not inherited by the next terminal), and that changing a linter rule now means
+changing its test too. All three are the intended price: they make the rule harder to
+change accidentally, which is what a rule binding every instance should be.
