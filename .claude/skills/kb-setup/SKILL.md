@@ -55,7 +55,10 @@ This is the per-user file that wired project repos import
 picks it up. A personal path never belongs in a committed file.
 
 If that file already exists with a different path, show both paths and ask which one
-wins before overwriting.
+wins before overwriting. If that existing path is a clone of a **different** vault, this
+is a name collision, not a moved clone: several vaults on one machine are fine, but their
+repo basenames must differ, because this file is named after the basename. Say so — the
+fix is renaming one of the vault repos, since overwriting silently unwires the other one.
 
 ## 7. Setup gate
 

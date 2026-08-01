@@ -51,6 +51,19 @@ project repo imports. Then it tells you the three actions below. Nothing else to
 
 </details>
 
+### Multiple vaults on one machine
+
+Fully supported. The plugin is installed once and serves every vault; run `kb-setup`
+once per vault. Each vault gets its own `~/.claude/<vault-name>.md`, and each wired
+project repo imports the file of the vault it belongs to — so a repo can point at the
+team vault while another points at your personal one.
+
+One caveat: **the vault repo basenames must be distinct across your vaults.** The
+per-user file is named after the basename, so `team-kb` and `second-brain` coexist
+happily, but two repos both named `kb` — even under different orgs or hosts — collide on
+the same `~/.claude/kb.md`. Rename one of the repos, or accept that only one of them can
+be wired on this machine.
+
 ## The three actions
 
 ### 1. Drop anything into `_inbox/`
