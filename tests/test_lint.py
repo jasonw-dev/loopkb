@@ -216,6 +216,17 @@ class LintTest(TempDirTestCase):
         self.assertIn("'notes' is not a type folder", out)
         self.assertIn("1 warning(s)", out)
 
+    def test_framework_directories_are_outside_the_note_namespace(self) -> None:
+        # integrations/ ships one SKILL.md per agent platform: four identical basenames
+        # that would collide in the index, and none of them is a note.
+        for agent in ("codex", "other"):
+            write(self.vault / "integrations" / agent / "kb-search" / "SKILL.md", "# pointer\n")
+        write(self.vault / "docs" / "design-decisions.md", "# ADRs\n")
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("warning", out)
+        self.assertNotIn("SKILL", out)
+
     def test_inbox_notes_are_never_warned_about(self) -> None:
         write(self.vault / "_inbox" / "rough-idea.md", "some unclassified text\n")
         code, out = self.lint()

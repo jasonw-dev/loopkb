@@ -8,9 +8,9 @@ Exit code 0 when the vault is clean, 1 when it has violations.
 Every violation is printed as one `path: problem` line, relative to the vault root.
 
 Scope: the type folders only (one folder per template in `_meta/templates/`).
-`_meta/`, `_inbox/`, `_attachments/`, `.obsidian/` and other framework
-directories are never schema-checked; `_inbox/` still participates in the
-basename index so wikilink resolution and uniqueness see the whole vault.
+`_meta/`, `_inbox/`, `_attachments/`, `.obsidian/`, `integrations/` and other
+framework directories are never schema-checked; `_inbox/` still participates in
+the basename index so wikilink resolution and uniqueness see the whole vault.
 
 Python 3 standard library only — no third-party dependencies, no YAML parser.
 The frontmatter dialect used by this vault is deliberately small enough to
@@ -37,6 +37,7 @@ SKIP_DIRS = {
     "_meta",
     "_attachments",
     "docs",
+    "integrations",
     "scripts",
     "tests",
 }
