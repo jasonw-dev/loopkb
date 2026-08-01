@@ -141,6 +141,83 @@ links, tags, `raw → curated`) still commits directly in this mode too.
 Pick `reviewed` when you do not yet trust the agent with your vault, and switch to
 `autonomous` once you find yourself approving everything unread.
 
+## Automating the loop (optional)
+
+The manual flow is the default and stays fully supported: once a week, someone opens the
+vault and says "run kb-loop". If you would rather it happen on a schedule, nothing in the
+framework objects — the lease already makes a scheduled run and a manual one safe to
+overlap (whoever starts second stops cleanly instead of colliding), and the digest is
+written the same way either way.
+
+The honest prerequisites, before the YAML:
+
+- **A funded API key.** A headless agent run costs real money, and a schedule turns that
+  into a recurring cost. Nothing here is free.
+- **Push access for the runner.** The job commits to `main`, so its token needs push
+  rights and — in `autonomous` mode — no branch protection standing in the way.
+- **Someone still reads the digest.** Automating the run does not automate the review;
+  it only changes who types the sentence.
+- **Give the runner its own identity** via `KB_LOOP_HOLDER` (e.g. `ci-schedule`), so the
+  lease messages and the digest header say plainly which runs were unattended.
+
+GitHub Actions, weekly:
+
+```yaml
+# .github/workflows/kb-loop.yml
+name: kb-loop
+on:
+  schedule:
+    - cron: "0 6 * * 1"           # Mondays, 06:00 UTC
+  workflow_dispatch:
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # reflect and the digest verifier both read history
+      - run: npm install -g @anthropic-ai/claude-code
+      - env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          KB_LOOP_HOLDER: github-actions
+        run: claude -p "run kb-loop"
+```
+
+GitLab CI, same shape — add the job, then create the schedule under **Build → Pipeline
+schedules**. The runner's clone needs a push credential (a project access token in the
+remote URL); `GIT_DEPTH: 0` is the equivalent of `fetch-depth: 0`:
+
+```yaml
+# .gitlab-ci.yml
+kb-loop:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  image: node:22
+  variables:
+    GIT_DEPTH: 0
+    KB_LOOP_HOLDER: gitlab-schedule
+  script:
+    - npm install -g @anthropic-ai/claude-code
+    - claude -p "run kb-loop"
+```
+
+**Lint in CI** is far cheaper than automating the loop and worth it either way — it
+catches schema violations at push time instead of at the weekly run. This repo ships
+`.github/workflows/lint.yml`, which works unchanged for any GitHub-hosted instance. There
+is deliberately no root `.gitlab-ci.yml`: that file would switch CI on for every instance
+the moment it merged a template update, so GitLab instances opt in by pasting this:
+
+```yaml
+# .gitlab-ci.yml
+lint:
+  image: python:3-slim
+  script:
+    - python3 scripts/lint.py
+    - python3 -m unittest discover -s tests
+```
+
 ## Concepts in plain words
 
 **Why a loop?** A write-only knowledge base rots: duplicates pile up, nothing links to

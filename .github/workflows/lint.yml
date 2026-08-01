@@ -1,0 +1,34 @@
+# Vault health on every push: the schema check, plus the framework's own tests.
+#
+# This works unchanged for the template repo and for any GitHub-hosted instance
+# created from it, and is simply ignored on hosts that are not GitHub. Instances on
+# GitLab: paste the equivalent job from GETTING-STARTED.md → "Automating the loop
+# (optional)" — the template deliberately ships no root .gitlab-ci.yml, so turning
+# CI on stays an opt-in rather than something a template merge switches on for you.
+name: lint
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  vault:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Lint the vault schema
+        run: python3 scripts/lint.py
+
+      - name: Run the framework tests
+        run: |
+          if [ -d tests ]; then
+            python3 -m unittest discover -s tests
+          else
+            echo "no tests/ directory in this instance — skipping"
+          fi
