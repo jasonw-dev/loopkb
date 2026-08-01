@@ -45,6 +45,9 @@ Then **commit and push** the drop (`git add _inbox && git commit && git push`) â
 run the loop from the same machine you dropped it on. An uncommitted file exists on
 one disk only; a loop run anywhere else cannot see it.
 
+A personal vault with no `origin` remote works fully offline: every skill skips the
+pull and push and just commits.
+
 ### 2. Save from a conversation: kb-save
 
 Just solved a problem with your AI agent? Say **"kb-save"** (or "save this to the

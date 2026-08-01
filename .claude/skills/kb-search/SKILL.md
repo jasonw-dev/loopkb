@@ -10,8 +10,10 @@ Search the team knowledge base before re-deriving a solution from scratch.
 ## Locate the vault
 
 Same resolution as kb-save: the `KB_VAULT` line in your loaded context (imported
-from the per-user file), else ask once and offer to create that file — or run
-`kb-setup <vault url>`, which is what normally creates it.
+from the per-user file); else glob `~/.claude/*.md` for a `KB_VAULT:` line before
+asking anything — `kb-setup` may have written one this repo does not import; else
+ask once and offer to create that file — or run `kb-setup <vault url>`, which is
+what normally creates it.
 If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (skip on network failure — search the local copy).
 
 ## Steps

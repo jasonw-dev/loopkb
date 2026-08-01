@@ -13,7 +13,9 @@ Check, in order:
 0. If the current repo IS a loopkb vault (it contains `_meta/loop.md`), use it directly.
 1. The `KB_VAULT` line already in your loaded context — wired projects' CLAUDE.md
    imports it from a per-user file (e.g. `@~/.claude/<vault-name>.md`).
-2. Ask the user once, then offer to create that per-user file with the
+2. The disk, before asking: glob `~/.claude/*.md` for a `KB_VAULT:` line. `kb-setup` may
+   have written one already even though this repo does not import it.
+3. Ask the user once, then offer to create that per-user file with the
    `KB_VAULT: /path` line (never write a personal path into a committed file).
    That file is normally written by `kb-setup` when the user joins the vault, so its
    absence usually means kb-setup was never run — offer that instead if they have no
@@ -42,6 +44,8 @@ Check, in order:
    git add <file> && git commit -m "[kb-save] <type>: <title>"
    git push
    ```
+   If the vault has no `origin` remote, skip the pull and the push entirely and just
+   commit — a local-only vault is a valid setup, not an error.
    If the rebase hits conflicts: abort it, commit the new note locally, and tell the
    user sync is pending. If push fails on network (vault remote unreachable), commit
    locally and tell the user push is pending.

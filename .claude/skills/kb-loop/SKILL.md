@@ -77,7 +77,9 @@ is merged or closed (`git push origin --delete <branch>`; `git branch -D <branch
    `[kb-loop] run report: <YYYY-MM-DD>`. "Risky actions" comes first and carries the
    commit SHAs in `autonomous` mode, or the open MR URLs in `reviewed` mode; write
    `none` when the section is empty.
-2. Push main. On conflict: rebase and retry; if the conflict cannot be resolved,
+2. Push main — unless the vault has no `origin` remote, in which case skip the push
+   (and the pre-flight pull): a local-only vault is a valid setup, not an error.
+   On conflict: rebase and retry; if the conflict cannot be resolved,
    abort, keep the work on a local branch, and tell the user sync is pending.
    Never force-push main (see CLAUDE.md guardrails for the `kb-loop/*` branch rule).
 3. **Release the lease**: `python3 scripts/lease.py release`. Do this on every exit
