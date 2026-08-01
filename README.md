@@ -81,11 +81,14 @@ CI release job fails with checksum mismatch after a dependency bump.
 
 ## Quick start
 
-1. Create a repo from this template.
-2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — three daily actions, plus
-   instance setup (one file to fill in) and how to pull template updates.
+1. Create a repo from this template — GitHub "Use this template", or the clone-and-reinit
+   recipe in GETTING-STARTED.md → "Starting a new instance (creator, once per team)" for
+   any other git host.
+2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — the two roles (creator vs. member),
+   three daily actions, instance setup (one file to fill in), and how to pull template updates.
 3. Joining a vault that already exists? Install the plugin (below) and say
-   `kb-setup <vault repo URL>` — that is the whole onboarding.
+   `kb-setup <vault repo URL>` — that is the whole onboarding, and you never clone
+   anything yourself. See "Joining a vault (member, once per machine)".
 4. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).
 
 Requirements: git, Python 3 (stdlib only, for `scripts/`),

@@ -14,6 +14,9 @@ and maintains them; git is the sync, review and undo layer.">
 
 ## Joining this vault (once per machine)
 
+You never run `git clone` yourself: the plugin machinery fetches the skills, and
+`kb-setup` clones the vault for you.
+
 In Claude Code, install the plugin:
 
 ```

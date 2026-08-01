@@ -64,7 +64,7 @@ is not configured yet: `kb-loop` refuses to run and triage has nothing to classi
 against. Say so, then:
 
 - **They created this vault** → point at `GETTING-STARTED.md` → "Starting a new instance
-  from this template" and offer to work the checklist with them.
+  (creator, once per team)" and offer to work the checklist with them.
 - **They are joining someone else's vault** → tell them to ask the vault owner to finish
   it. `kb-save` and `kb-search` still work meanwhile; only the loop is blocked.
 

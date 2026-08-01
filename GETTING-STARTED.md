@@ -5,7 +5,24 @@
 You interact with this knowledge base through **three daily actions**. Everything else
 is done by the maintenance loop.
 
-## Joining a vault (once per machine)
+## Two roles
+
+There are exactly two jobs around a vault, and most people only ever do the second one.
+
+**Creator** — once per team. Instantiate this template into a new repo, fill
+`_meta/instance.md`, grant your teammates write access, and share the vault URL.
+See "Starting a new instance (creator, once per team)" below.
+
+**Member** — once per machine. Install the plugin and run `kb-setup <vault URL>`.
+See "Joining a vault (member, once per machine)" right below.
+
+The creator is also a member: creating the vault does not wire your own machine, so you
+run `kb-setup` too.
+
+## Joining a vault (member, once per machine)
+
+You never run `git clone` yourself: the plugin machinery fetches the skills, and
+`kb-setup` clones the vault for you.
 
 In Claude Code, install the plugin and say one sentence:
 
@@ -128,7 +145,7 @@ correction, and changes the rules so the same mistake stops happening. Your corr
 ARE the training signal — and in `autonomous` mode, `git revert` is the *only* control
 you need, which is why it must stay meaningful: revert what is actually wrong.
 
-## Starting a new instance from this template
+## Starting a new instance (creator, once per team)
 
 Work through this checklist — the instance is ready when every box is checked:
 
@@ -158,8 +175,9 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] Rewrite the README for your instance (the template README describes the framework):
       copy `_meta/README.instance.md` over `README.md` and fill in the blanks. **Keep the
       join block** — the two plugin-install commands plus `kb-setup <your vault URL>` — or
-      at minimum link to GETTING-STARTED.md → "Joining a vault". Once the framework README
-      is gone, that block is the only place a new teammate finds the way in.
+      at minimum link to GETTING-STARTED.md → "Joining a vault (member, once per
+      machine)". Once the framework README is gone, that block is the only place a new
+      teammate finds the way in.
 - [ ] Run `kb-setup <your vault URL>` on your own machine too — creating the vault did
       not wire this machine. It is what writes the per-user `~/.claude/<vault-name>.md`
       that every wired project repo imports.
@@ -168,7 +186,8 @@ Work through this checklist — the instance is ready when every box is checked:
       human reading UI, nothing more — the vault is fully usable without it.
 - [ ] Grant your teammates write access to the repo — `autonomous` mode needs everyone
       able to push `main` — then tell them how to join: install the plugin, then
-      `kb-setup <your vault repo URL>` (see "Joining a vault" above).
+      `kb-setup <your vault repo URL>` (see "Joining a vault (member, once per machine)"
+      above).
 
 If you run CI, wire `python3 scripts/lint.py` into it — one job per push keeps schema
 violations from ever reaching the weekly loop.
@@ -207,7 +226,9 @@ signal to move the customization into `_meta/instance.md` as a policy override i
 
 ## 中文導讀
 
-**加入一個 vault**：裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後，說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫好 `~/.claude/<vault-name>.md` 都由 agent 完成；不用 plugin 的話，上面英文段落有手動四步驟。
+**兩種角色**：**建立者**（每個團隊一次：從 template 開新 repo、填 `_meta/instance.md`、給團隊成員權限、把 vault URL 發出去）與**成員**（每台機器一次：裝 plugin、跑 `kb-setup <vault URL>`）。建立者自己也是成員——建好 vault 不等於這台機器已經接好。
+
+**加入一個 vault**：你不用自己 `git clone`——plugin 機制會抓 skills，vault 由 `kb-setup` 幫你 clone。裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後，說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫好 `~/.claude/<vault-name>.md` 都由 agent 完成；不用 plugin 的話，上面英文段落有手動四步驟。
 
 日常只有三個動作：
 
