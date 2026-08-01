@@ -3,7 +3,7 @@
 **A loop-driven knowledge base framework for AI agents.** Obsidian-compatible,
 git-native, and continuously self-improving.
 
-**[▶ Visual intro（視覺化導覽）](https://jasonw-dev.github.io/loopkb/explainer.html)** — a 3-minute illustrated tour of how the loop works.
+**[▶ Visual intro（視覺化導覽）](https://jasonw-dev.github.io/loopkb/)** — a 3-minute illustrated tour of how the loop works.
 
 *(中文導讀在文末)*
 
