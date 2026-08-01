@@ -38,7 +38,11 @@ SKIP_DIRS = {
     "_attachments",
     "docs",
     "scripts",
+    "tests",
 }
+
+# Collected into the basename index but deliberately schema-free — no warning.
+NON_TYPE_FOLDERS = {"_inbox"}
 
 KEBAB_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 DATED_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-(.+)$")
@@ -249,8 +253,10 @@ def check_note(path: Path, rel: Path, folder: str, vocab: set[str], index: dict[
     return [f"{rel}: {p}" for p in problems]
 
 
-def lint(vault: Path) -> tuple[list[str], int]:
+def lint(vault: Path) -> tuple[list[str], list[str], int]:
+    """Returns (violations, warnings, notes checked). Warnings never fail the run."""
     problems: list[str] = []
+    warnings: list[str] = []
     vocab, vocab_problems = read_vocabulary(vault)
     problems.extend(vocab_problems)
 
@@ -272,11 +278,18 @@ def lint(vault: Path) -> tuple[list[str], int]:
         rel = path.relative_to(vault)
         folder = rel.parts[0]
         if folder not in folders:
-            continue  # _inbox and other non-type folders carry no schema
+            # `_inbox` is schema-free by design; anything else here is a folder the
+            # schema cannot see, which is almost always an accident.
+            if folder not in NON_TYPE_FOLDERS:
+                warnings.append(
+                    f"{rel}: warning: '{folder}' is not a type folder, so this note is invisible to "
+                    f"the schema — move it into a type folder, or add _meta/templates/{folder}.md"
+                )
+            continue
         checked += 1
         problems.extend(check_note(path, rel, folder, vocab, index))
 
-    return problems, checked
+    return problems, warnings, checked
 
 
 def main(argv: list[str]) -> int:
@@ -285,13 +298,16 @@ def main(argv: list[str]) -> int:
         print(f"{vault}: not a directory", file=sys.stderr)
         return 1
 
-    problems, checked = lint(vault)
+    problems, warnings, checked = lint(vault)
+    for warning in warnings:
+        print(warning)
     for problem in problems:
         print(problem)
+    suffix = f", {len(warnings)} warning(s)" if warnings else ""
     if problems:
-        print(f"\nlint: {len(problems)} violation(s) across {checked} note(s) checked")
+        print(f"\nlint: {len(problems)} violation(s) across {checked} note(s) checked{suffix}")
         return 1
-    print(f"lint: clean ({checked} note(s) checked)")
+    print(f"lint: clean ({checked} note(s) checked{suffix})")
     return 0
 
 
