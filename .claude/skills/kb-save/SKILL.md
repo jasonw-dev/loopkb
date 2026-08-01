@@ -45,8 +45,12 @@ Check, in order:
 
 ## Rules
 
-- One note per distinct piece of knowledge. Two problems solved = two notes.
+- One note per distinct piece of knowledge, one note per commit. Two problems solved =
+  two notes. A human who disagrees with a save reverts that commit, and the loop's
+  reflect stage reads that revert as a correction signal — so a commit that carries
+  two unrelated notes cannot be rejected cleanly.
 - Follow the vault's CLAUDE.md write tiers: kb-save only ADDS notes. Never modify
-  existing notes from this skill — that is the loop's job.
+  existing notes from this skill — that is the loop's job. This is additive in both
+  governance modes, so kb-save never needs to know which mode the vault runs in.
 - Body language: per `_meta/instance.md` → Identity (English when unset).
 - New notes are always `status: raw`. Never write `curated` or `evergreen` here.
