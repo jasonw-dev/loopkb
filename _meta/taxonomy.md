@@ -1,13 +1,20 @@
 # Taxonomy
 
+> **Framework-owned — read-only for agents.** Learned rules never land here: the reflect
+> stage writes them as dated entries under `_meta/instance.md` → "Classification rule
+> amendments", which extend or override this file. **Read the two together; an amendment
+> wins.** A template update replaces this file wholesale, so a rule written here by hand
+> is a rule that a future `git merge upstream/main` deletes.
+
 Framework rules. Nothing in this file is instance-specific — the domain tag
-vocabulary, the note body language, and any policy overrides live in
-`_meta/instance.md`.
+vocabulary, the classification rule amendments, the note body language, and any policy
+overrides live in `_meta/instance.md`.
 
 ## Types (folders)
 
 A note has exactly ONE type. The type decides the folder and the template
-(`_meta/templates/<type>.md`). Decision rules, in order — first match wins:
+(`_meta/templates/<type>.md`). Decision rules, in order — first match wins, unless an
+amendment in `_meta/instance.md` says otherwise:
 
 | Type | It is a match when… | Not a match when… |
 |---|---|---|

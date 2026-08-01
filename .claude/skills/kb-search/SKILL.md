@@ -19,7 +19,8 @@ If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (sk
 ## Steps
 
 1. Read `<vault>/_meta/taxonomy.md` for the type folders and `<vault>/_meta/instance.md`
-   for the domain tag vocabulary and vault scope.
+   for the domain tag vocabulary, the vault scope, and the classification rule
+   amendments (what this vault has learned; they override the taxonomy).
 2. Search in this order:
    - Filename scan of the likely type folder (filenames are descriptive kebab-case).
    - `grep -ril` across the vault for error-message fragments, tool names, tag values.

@@ -14,6 +14,10 @@ version (`git checkout --ours`). See GETTING-STARTED.md → "Updating an instanc
 **Precedence**: policies in this file OVERRIDE the framework defaults in
 `CLAUDE.md`. Agents read `CLAUDE.md` first, then this file.
 
+**Do not rename or translate the section headings below.** `scripts/lint.py` locates the
+domain vocabulary by heading text, and agents locate the classification rule amendments
+the same way; a renamed heading reads to both as an empty section.
+
 ## Identity
 
 - **Note body language**: <e.g. English · or: Traditional Chinese (Taiwan), technical terms kept in English>
@@ -57,6 +61,32 @@ unreported. Once it is non-empty, the `_meta/` write rule for agents is active.
 - `frontend`
 - `backend`
 -->
+
+## Classification rule amendments
+
+**Instance-owned — this is where the taxonomy learns.** `_meta/taxonomy.md` is
+framework-owned and read-only for agents, so every classification rule the reflect stage
+learns (`_meta/loop.md`, Stage 3) lands *here* instead, as a dated amendment entry that
+EXTENDS or OVERRIDES the framework rules. Agents read `_meta/taxonomy.md` and this
+section **together, and an amendment wins over the taxonomy line it contradicts.**
+
+That split is what makes template updates safe: `git merge upstream/main` replaces
+`_meta/taxonomy.md` wholesale but never touches this file, so nothing your vault learned
+is lost to a framework release (GETTING-STARTED.md → "Updating an instance").
+
+One entry per amendment, newest last, dated:
+
+```
+### 2026-08-01 — a meeting note that is only a decision files as `decisions`
+- **Amends**: `_meta/taxonomy.md` → Types → `meetings` (overrides)
+- **Evidence**: 2 human corrections — a1b2c3d, e4f5a6b
+- **Rule**: when a meeting note's entire content is one decision and its reasoning, file
+  it as `decisions`; `meetings` keeps records that carry more than the decision.
+```
+
+Empty is the correct starting state — a fresh vault has learned nothing yet. Entries are
+also removable: an amendment a human reverts is gone, and that revert is next run's
+rejection signal.
 
 ## Project tags
 

@@ -9,9 +9,11 @@ Run the maintenance loop. You MUST be inside the vault repo.
 
 ## Pre-flight
 
-1. Read `CLAUDE.md`, `_meta/instance.md` (its policies override CLAUDE.md),
-   `_meta/taxonomy.md`, and `_meta/loop.md` in full. `_meta/loop.md` is the pipeline
-   spec — this skill only orchestrates it.
+1. Read `CLAUDE.md`, `_meta/instance.md` (its policies override CLAUDE.md, and its
+   "Classification rule amendments" section overrides `_meta/taxonomy.md`),
+   `_meta/taxonomy.md`, and `_meta/loop.md` in full. Taxonomy and amendments are one
+   rule set read together. `_meta/loop.md` is the pipeline spec — this skill only
+   orchestrates it.
 2. **Read the governance mode**: `_meta/instance.md` → Governance → Mode. `autonomous`
    or `reviewed`; an absent or unrecognised value means `autonomous` (the framework
    default). Every channel decision below and in `_meta/loop.md` depends on it — decide
@@ -45,9 +47,13 @@ and `_meta/` rule changes included. No branches, no MRs, no platform API.
   same commit; a rename retargets its links in that same commit.
 - Record every risky action for the digest as you go — action, notes involved, reason,
   commit SHA. Do not reconstruct the list at the end.
-- Before redoing anything: check the rejection memory (loop.md Stage 3). A human
-  `git revert` of a `[kb-loop]`/`[kb-save]` commit is a rejection; do not re-attempt
-  that action unless the notes involved have materially changed.
+- Before redoing anything, **re-derive the rejection memory from git** — never read it
+  out of the previous digest: `git log --no-merges --grep="This reverts" --format='%H %s'`
+  over the FULL history, then resolve each `This reverts commit <sha>` and keep the ones
+  whose reverted subject carries a `[kb-loop]`/`[kb-save]` prefix. Those actions are not
+  re-attempted unless the notes involved have materially changed (loop.md Stage 3).
+- Rule changes learned this run go into `_meta/instance.md` → "Classification rule
+  amendments", never into `_meta/taxonomy.md` (framework-owned).
 - `curated → evergreen` is still off-limits — nominate it in the digest instead.
 
 ### `reviewed` mode
@@ -63,8 +69,9 @@ git push -u origin kb-loop/<short-topic>-$(date +%Y%m%d)
 git checkout main
 ```
 Branching from `origin/main` keeps each MR diff limited to its own changes. Before
-opening anything, list open `kb-loop/*` MRs and recently closed ones — do not
-re-propose what is pending or what was already rejected (see loop.md, Stage 3).
+opening anything, query the platform for open `kb-loop/*` MRs and recently closed ones —
+per run, from the platform itself, not from the last digest — and do not re-propose what
+is pending or what was already rejected (see loop.md, Stage 3).
 Budget: 3 MRs per run, 1 reserved for reflect.
 
 Branch hygiene: delete `kb-loop/*` branches locally and on the remote once their MR

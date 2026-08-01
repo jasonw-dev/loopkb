@@ -301,7 +301,10 @@ Work through this checklist — the instance is ready when every box is checked:
   `--allow-unrelated-histories` and conflicts by design — "Updating an instance" walks
   through it.
 - [ ] Fill `_meta/instance.md`: identity (note body language, vault scope), the domain
-      tag vocabulary, and any policy overrides. This is the **only** file you fill in —
+      tag vocabulary, and any policy overrides. Leave "Classification rule amendments"
+      empty — that section is where the loop writes the rules it learns from your
+      corrections, and it stays yours across template updates. This is the **only** file
+      you fill in —
       every other file is framework-owned, which is what keeps template updates
       mergeable (see "Updating an instance" below).
 - [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
@@ -399,6 +402,12 @@ git add -A
 git commit
 ```
 
+**Nothing your vault has learned is at risk here.** `git checkout --theirs -- .` replaces
+`_meta/taxonomy.md` with upstream's copy, and that is safe because the loop never writes
+that file: every classification rule the reflect stage learns is a dated entry under
+`_meta/instance.md` → "Classification rule amendments", which the line below keeps. The
+framework owns the rule *format*; your instance owns the rules it learned.
+
 Two caveats on that recipe. If upstream restructured the `_meta/instance.md` skeleton,
 `--ours` keeps your values and you adopt the new sections by hand before committing. And
 if you deliberately edited a framework file, `--theirs -- .` throws that edit away — which
@@ -416,7 +425,9 @@ merge will not conflict there.
 
 Instance-owned content does not conflict once the histories are joined: the template
 ships `_meta/instance.md` as an empty skeleton and nothing else carries instance-specific
-content. The one case that needs hands is when the **skeleton itself** changed upstream (a
+content — including the classification rules your loop learned, which live in that same
+file under "Classification rule amendments" and are therefore never touched by a merge.
+The one case that needs hands is when the **skeleton itself** changed upstream (a
 new section, a renamed one): git will report a conflict in `_meta/instance.md` — keep your
 values, adopt the new structure around them, and commit the merge.
 
@@ -475,6 +486,6 @@ to correct.
 
 **status 生命週期**：`raw`（剛歸檔）→ `curated`（整理過，agent 可自行升級）→ `evergreen`（可長期信賴，**兩種模式下都只有人類能授予**；agent 只能提名——`autonomous` 寫在 digest 一行，`reviewed` 開 MR。你不理它，提名就自動失效，不會累積待辦）。讀的人優先信任高 status。
 
-**你的修正就是訓練訊號**：agent 分錯了，直接自己搬正、commit 即可（不用特殊格式）；`git revert` 掉 agent 的 commit（`autonomous`）或把 agent 開的 MR 關掉不合併（`reviewed`）同樣算修正訊號。loop 的反省階段會從 git 歷史看到這些修正，改掉分類規則，讓同樣的錯不再發生——同一個被 revert 的動作，除非相關筆記真的變了，否則不會再做一次。
+**你的修正就是訓練訊號**：agent 分錯了，直接自己搬正、commit 即可（不用特殊格式）；`git revert` 掉 agent 的 commit（`autonomous`）或把 agent 開的 MR 關掉不合併（`reviewed`）同樣算修正訊號。loop 的反省階段會從 git 歷史看到這些修正，改掉分類規則，讓同樣的錯不再發生——同一個被 revert 的動作，除非相關筆記真的變了，否則不會再做一次（被拒絕過的動作每一圈都是「當場從 git 歷史重新推導」，不是從上一份 digest 抄來的，所以 digest 不見也不會失憶）。學到的規則會寫進 `_meta/instance.md` 的「Classification rule amendments」段落——那是你的檔案，`_meta/taxonomy.md` 則屬於框架、agent 只讀不寫，所以之後拉模板更新不會把學到的規則蓋掉。
 
 **開新實例**：只需要填 `_meta/instance.md` 一個檔案（語言、範圍、治理模式、領域標籤字彙、政策覆寫）；其餘都是框架檔案，所以之後 `git merge upstream/main` 拉模板更新幾乎不會衝突。唯一的例外是**第一次**：實例的 git 歷史與模板無關，第一次合併要加 `--allow-unrelated-histories`，而且一定會在所有變動過的檔案上產生 add/add 衝突——框架檔案取 upstream（`git checkout --theirs`）、`README.md` 與 `_meta/instance.md` 保留自己的（`git checkout --ours`），commit 之後歷史就接起來了，往後的合併就如上所述。細節見英文段落 "Updating an instance"。

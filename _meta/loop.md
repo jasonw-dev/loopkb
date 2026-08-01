@@ -46,7 +46,10 @@ aborts for any reason releases the lease before reporting.
 
 For each item in `_inbox/`:
 
-1. Decide the type using `_meta/taxonomy.md` decision rules.
+1. Decide the type using `_meta/taxonomy.md` decision rules **together with the
+   amendments in `_meta/instance.md` → "Classification rule amendments"** — the taxonomy
+   is the framework's rule set, the amendments are what this vault has learned, and an
+   amendment wins where the two disagree.
 2. **Commit the original first**: if the item is untracked OR has uncommitted
    modifications, commit it as-is before filing — the raw original must exist in git
    history before filing rewrites it.
@@ -96,8 +99,8 @@ Pick notes: all `raw` before any `curated`; within a status, oldest frontmatter
 - Promote `raw → curated` when the floor in `_meta/taxonomy.md` is met (direct commit).
   `curated → evergreen` is human-conferred in both modes: an agent may only *nominate* —
   a digest line in `autonomous`, an MR in `reviewed`.
-- Before merging or distilling anything, check what has already been rejected
-  (Stage 3, rejection memory) and skip it. In `reviewed` mode additionally list open
+- Before merging or distilling anything, derive the rejection memory (Stage 3 — from git,
+  not from the last digest) and skip what it names. In `reviewed` mode additionally list open
   `kb-loop/*` branches and MRs and skip anything already pending review — the repo
   alone is not the whole state there, the platform holds open proposals. In
   `autonomous` mode there is nothing pending by construction: work either landed on
@@ -145,11 +148,26 @@ modes; signal 2 is where the modes differ.
      together with their review comments. A closed proposal is a strong correction
      signal: a human looked at the agent's reasoning and rejected it.
 
-**Rejection memory** covers both forms. An action that was rejected — a reverted
-commit in `autonomous`, an unmerged closed MR in `reviewed` — must NOT be redone
-unless the notes involved have materially changed since (their *content* changed, not
-just frontmatter or formatting). Record the rejected pairs/sets and the reverted SHAs
-in the digest so the next run sees them without re-deriving anything.
+**Rejection memory** covers both forms, and every run **re-derives the whole set from
+scratch** — it is never copied forward from the last digest. In `autonomous` mode, over
+the FULL history (not the window):
+
+```
+git log --no-merges --grep="This reverts" --format='%H %s'
+```
+
+For each hit, resolve the `This reverts commit <sha>` line in its body and keep the ones
+whose reverted commit's subject carries an agent prefix. That set *is* the rejection
+memory — plain git, no state file, nothing to lose. In `reviewed` mode the platform's
+closed-MR list is queried per run for the same reason.
+
+An action that was rejected — a reverted commit in `autonomous`, an unmerged closed MR in
+`reviewed` — must NOT be redone unless the notes involved have materially changed since
+(their *content* changed, not just frontmatter or formatting).
+
+The digest still **lists** the rejection set, for the human. That listing is display only:
+a lost, stale or hand-edited digest costs the loop nothing, because the next run derives
+the same set again from history.
 
 Nothing distinguishes a revert of a merge from a revert of a rename: the rule is
 per-action. Re-attempting a reverted action without new evidence is the single worst
@@ -174,16 +192,21 @@ there is no platform in the loop to be unavailable.
 3. `reviewed` mode: do not propose while an open `[kb-loop]` proposal MR already
    covers the pattern — dedup against open proposals before drafting anything.
    `autonomous` mode: do not re-apply a rule change the human reverted.
-4. Draft the change to `_meta/taxonomy.md` (framework rules) or `_meta/instance.md`
-   (vocabulary, policy) that would have prevented the misclassification.
+4. Draft the change **into `_meta/instance.md`** — never into `_meta/taxonomy.md`, which
+   is framework-owned and read-only for agents (a template merge would overwrite anything
+   written there). A type-criteria, naming or source-field change becomes a dated entry
+   under "Classification rule amendments" that extends or overrides the taxonomy line it
+   addresses; a new domain tag or a policy change goes to its own section, as before.
+   Amendments are read together with `_meta/taxonomy.md` on every classification, and
+   they win — which is also what makes them survive `git merge upstream/main`.
 5. Land it through the mode's `_meta/` channel:
    - `autonomous` — commit it to `main` directly, message
-     `[kb-loop] taxonomy change: <summary>`, and give it a digest risky-action line
+     `[kb-loop] rule amendment: <summary>`, and give it a digest risky-action line
      stating the observed corrections (with commit refs), the rule change, and the
      expected effect. The human reverts the commit if they disagree; that revert is
      next run's signal 2.
-   - `reviewed` — open an MR titled `[kb-loop] taxonomy proposal: <summary>` with the
-     same explanation (commit refs and closed-MR refs), and wait.
+   - `reviewed` — open an MR titled `[kb-loop] rule amendment proposal: <summary>` with
+     the same explanation (commit refs and closed-MR refs), and wait.
 
 Rules are the constitution. Once setup is complete (the domain vocabulary in
 `_meta/instance.md` is non-empty), a `_meta/` change is never silent: it is either an
@@ -219,7 +242,7 @@ Instances with CI should run the same command on every push.
 
 - Refine: max 10 notes (freshness check included), both modes.
 - `reviewed` mode only — open MRs: max 3 per run, of which 1 is reserved for
-  reflect's taxonomy proposal (refine may use at most 2). `autonomous` mode has no
+  reflect's rule-amendment proposal (refine may use at most 2). `autonomous` mode has no
   MR budget; the refine budget alone bounds the run, and reflect lands at most one
   rule change per run.
 - Hitting a limit skips the remaining work of that stage only — the pipeline always
@@ -276,7 +299,8 @@ Sections, in this order:
 3. **Triage** — what was filed, and items skipped as already-annotated.
 4. **Refine** — what was improved, which notes were freshness-checked and the verdict.
 5. **Reflect** — corrections observed, patterns counted, what was landed or proposed,
-   and the rejection memory (reverted SHAs / closed MRs) carried to the next run.
+   and the rejection memory (reverted SHAs / closed MRs) as it stands. That listing is
+   for the human to read, not for the next run to consume: the next run re-derives it.
 6. **Lint** — the exit status and anything left unfixed.
 7. **Stuck** — inbox items that need human context, and what context each needs.
 8. **Nominations** — `nominate <note> for evergreen: <reason>`, one per line.

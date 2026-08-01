@@ -32,9 +32,11 @@ Check, in order:
    where it lives (keychain entry, secret manager path, CI variable name) and how it is
    rotated, never the value. See `<vault>/_meta/taxonomy.md` → "What does NOT belong".
    If the knowledge cannot be written without the secret, do not save it.
-2. **Classify**: Apply the decision rules in `<vault>/_meta/taxonomy.md`. Determine
-   type, domains (closed vocabulary in `<vault>/_meta/instance.md` — never invent
-   tags), projects.
+2. **Classify**: Apply the decision rules in `<vault>/_meta/taxonomy.md` **together with
+   `<vault>/_meta/instance.md` → "Classification rule amendments"** — that section holds
+   what this vault has learned, and it overrides the taxonomy where they disagree. Read
+   both before deciding. Determine type, domains (closed vocabulary in the same
+   instance.md — never invent tags), projects.
 3. **File it**:
    - **Confident** (clear type match, no obvious duplicate — grep the type folder
      for overlapping filenames/keywords first): instantiate

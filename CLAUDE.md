@@ -15,8 +15,8 @@ for agent behavior. Other agents (Codex CLI, etc.) are pointed here via `AGENTS.
 
 | File | Purpose |
 |---|---|
-| `_meta/instance.md` | **Instance-owned**: identity, governance mode, domain vocabulary, policy overrides |
-| `_meta/taxonomy.md` | Type criteria, naming rules, source field, status lifecycle |
+| `_meta/instance.md` | **Instance-owned**: identity, governance mode, domain vocabulary, **classification rule amendments**, policy overrides |
+| `_meta/taxonomy.md` | **Framework-owned, read-only for agents**: type criteria, naming rules, source field, status lifecycle — read it together with instance.md's amendments, which win |
 | `_meta/loop.md` | The 4-stage maintenance pipeline and its guardrails |
 | `_meta/digest.md` | Framework-managed: the latest run's digest, overwritten every run |
 | `_meta/templates/` | One template per note type — always instantiate from these |
@@ -73,7 +73,7 @@ either mode. The "reviewed-mode channel" column applies to `reviewed` mode only.
 | Add note, add links/tags, formatting fix, `raw → curated` promotion | no | Commit directly to `main` |
 | Status demotion (one level down; reason required in commit message) | yes | Commit directly to `main` |
 | Merge notes, delete, rename, move across folders, rewrite existing content | yes | Branch + merge request |
-| Change `_meta/` rules (taxonomy / instance policy) | yes | Branch + merge request |
+| Change `_meta/` rules — amendments in `_meta/instance.md` (never `_meta/taxonomy.md`) | yes | Branch + merge request |
 | `curated → evergreen` promotion | — | **Never agent-performed in either mode** |
 
 `curated → evergreen` is human-conferred in both modes. An agent may only *nominate*:
@@ -83,6 +83,12 @@ that the human merges. An un-acted nomination costs the human nothing — it sim
 
 "Move across folders" means moving an already-filed note between type folders.
 Filing an item OUT of `_inbox/` is triage, which is additive → direct commit.
+
+"Change `_meta/` rules" always means writing `_meta/instance.md`: a dated entry under
+"Classification rule amendments" for a type/naming/source rule, or the vocabulary and
+policy sections for those. `_meta/taxonomy.md` is framework-owned — agents read it and
+never write it, since the next `git merge upstream/main` would overwrite the edit while
+an amendment survives untouched (`_meta/loop.md`, Stage 3).
 
 "Rewrite" boundary: reformatting that preserves meaning (layout, frontmatter fill,
 typo fixes) is additive; changing or removing semantic content is a rewrite.
@@ -164,7 +170,8 @@ write; it does not remove the lease, the linter, the push rules, or the prefixes
 
 ## Searching this vault (for agents of other repos)
 
-1. Read `_meta/taxonomy.md` for the structure and `_meta/instance.md` for the tag vocabulary.
+1. Read `_meta/taxonomy.md` for the structure and `_meta/instance.md` for the tag
+   vocabulary and the classification rule amendments (they override the taxonomy).
 2. Grep by tag and keywords across type folders.
 3. Trust order: `status: evergreen` > `curated` > `raw`.
 

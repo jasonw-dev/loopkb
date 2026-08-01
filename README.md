@@ -20,7 +20,9 @@ appends to:
   old notes for staleness.
 - **Rule evolution** — when humans correct the agent's filing — by fixing it directly,
   by reverting its commit, or by closing its merge request — the reflect stage mines
-  those corrections and changes the classification rules. The taxonomy learns.
+  those corrections and amends the classification rules. The taxonomy learns, and what it
+  learns is instance-owned (`_meta/instance.md` → "Classification rule amendments"), so a
+  template update never overwrites it.
 - **Executable schema** — `scripts/lint.py` (stdlib-only Python 3) is the definition
   of what a valid note is, so "is the vault healthy?" has a deterministic answer.
 - **Checked audit trail** — the run report is not taken on trust:
