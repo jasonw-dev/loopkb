@@ -204,4 +204,8 @@ that used to be prose a human might skip are now steps an agent cannot. The manu
 remain documented as a collapsed fallback for non-Claude-Code users, so the
 `~/.claude/<vault-name>.md` contract still has exactly one definition. The cost is that
 the plugin now touches the user's home directory, which is why the destination path and
-any conflicting existing file are always shown before being written.
+any conflicting existing file are always shown before being written. A later first-contact
+review found the gap on the other side of this decision — an instance that rewrites the
+framework README deletes the very instructions that make onboarding one sentence — so the
+template also ships `_meta/README.instance.md`, a stub that carries the join block through
+the rewrite.

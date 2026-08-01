@@ -3,6 +3,8 @@
 **A loop-driven knowledge base framework for AI agents.** Obsidian-compatible,
 git-native, and continuously self-improving.
 
+**[▶ Visual intro（視覺化導覽）](https://claude.ai/code/artifact/9052bb5e-eb3b-4d83-84d1-96aa9276dfcf)** — a 3-minute illustrated tour of how the loop works.
+
 *(中文導讀在文末)*
 
 ## What makes it different
