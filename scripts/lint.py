@@ -10,7 +10,8 @@ Every violation is printed as one `path: problem` line, relative to the vault ro
 Scope: the type folders only (one folder per template in `_meta/templates/`).
 `_meta/`, `_inbox/`, `_attachments/`, `.obsidian/`, `integrations/` and other
 framework directories are never schema-checked; `_inbox/` still participates in
-the basename index so wikilink resolution and uniqueness see the whole vault.
+the basename index so wikilink resolution and uniqueness see the whole vault —
+though a basename an inbox drop shares with a filed note is only a warning.
 
 Python 3 standard library only — no third-party dependencies, no YAML parser.
 The frontmatter dialect used by this vault is deliberately small enough to
@@ -137,7 +138,28 @@ def strip_code_fences(body: str) -> str:
 
 
 def wikilinks(body: str) -> list[str]:
-    return [t.strip() for t in WIKILINK_RE.findall(strip_code_fences(body)) if t.strip()]
+    """Links that actually exist for a reader.
+
+    HTML comments come out first: every template ships `[[...]]` examples inside a
+    `<!-- -->` block, and a comment is invisible in Obsidian — so a link in one is
+    neither a dangling link to report nor a link that satisfies the curated floor.
+    """
+    return [
+        t.strip()
+        for t in WIKILINK_RE.findall(strip_code_fences(strip_comments(body)))
+        if t.strip()
+    ]
+
+
+def read_text(path: Path) -> tuple[str | None, str | None]:
+    """(text, error). A file that is not UTF-8 is one violation line, not a traceback."""
+    try:
+        return path.read_text(encoding="utf-8"), None
+    except UnicodeDecodeError as exc:
+        return None, (
+            f"not valid UTF-8 (byte {exc.start} of the file): re-save it as UTF-8 — "
+            "the vault is UTF-8 only"
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -173,7 +195,10 @@ def read_vocabulary(vault: Path) -> tuple[set[str], list[str], list[str]]:
             ["_meta/instance.md: missing — the instance configuration file is required"],
             [],
         )
-    text = strip_comments(instance.read_text(encoding="utf-8"))
+    raw, error = read_text(instance)
+    if raw is None:
+        return set(), [f"_meta/instance.md: {error}"], []
+    text = strip_comments(raw)
     vocab: set[str] = set()
     warnings: list[str] = []
     in_section = False
@@ -225,7 +250,9 @@ def collect_notes(vault: Path) -> list[Path]:
 
 def check_note(path: Path, rel: Path, folder: str, vocab: set[str], index: dict[str, list[str]]) -> list[str]:
     problems: list[str] = []
-    text = path.read_text(encoding="utf-8")
+    text, error = read_text(path)
+    if text is None:
+        return [f"{rel}: {error}"]
     fm_lines, body = split_frontmatter(text)
 
     # --- filename rules -----------------------------------------------------
@@ -309,8 +336,23 @@ def lint(vault: Path) -> tuple[list[str], list[str], int]:
     for path in notes:
         index.setdefault(path.stem, []).append(str(path.relative_to(vault)))
     for stem, owners in sorted(index.items()):
-        if len(owners) > 1:
-            problems.append(f"{owners[0]}: basename '{stem}' is not unique — also at {', '.join(owners[1:])}")
+        if len(owners) < 2:
+            continue
+        # An inbox item is a drop, not a filing: "drop anything, we sort it out" cannot
+        # coexist with a hard failure for picking a name a filed note already uses.
+        # Triage renames it on the way out; until then it is a warning. Two *filed*
+        # notes colliding stay a violation — wikilinks resolve by basename alone.
+        inbox = [o for o in owners if o.split("/")[0] in NON_TYPE_FOLDERS]
+        if inbox:
+            filed = [o for o in owners if o not in inbox]
+            if not filed:
+                continue
+            warnings.append(
+                f"{inbox[0]}: warning: basename '{stem}' is already used by "
+                f"{', '.join(filed)} — triage must rename this item when it files it"
+            )
+            continue
+        problems.append(f"{owners[0]}: basename '{stem}' is not unique — also at {', '.join(owners[1:])}")
 
     checked = 0
     for path in notes:

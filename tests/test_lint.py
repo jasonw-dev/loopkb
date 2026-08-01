@@ -160,6 +160,35 @@ class LintTest(TempDirTestCase):
         code, out = self.lint()
         self.assertEqual(code, 0, out)
 
+    def test_wikilink_inside_an_html_comment_does_not_count(self) -> None:
+        # Templates legitimately ship `[[...]]` examples inside comments, and a comment
+        # is invisible in Obsidian: it must neither dangle nor satisfy the curated floor.
+        write(
+            self.vault / "guides" / "commented-link.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: curated\n---\n# Commented\n\n"
+            "<!-- ## Related\n- [[nowhere-note]]\n-->\n",
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 1, out)
+        self.assertIn("must link to at least one related note", out)
+        self.assertNotIn("nowhere-note", out)
+
+    def test_non_utf8_file_is_one_violation_not_a_traceback(self) -> None:
+        path = self.vault / "guides" / "cp950-note.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(
+            b"---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            b"source: inbox\nstatus: raw\n---\n# "
+            + "測試中文".encode("cp950")
+            + b"\n"
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 1, out)
+        self.assertIn("guides/cp950-note.md: not valid UTF-8", out)
+        self.assertNotIn("Traceback", out)
+        self.assertIn("1 violation(s)", out)
+
     def test_duplicate_basename_across_folders(self) -> None:
         write(
             self.vault / "troubleshooting" / "alpha-note.md",
@@ -167,6 +196,15 @@ class LintTest(TempDirTestCase):
             "source: inbox\nstatus: raw\n---\n# Duplicate\n",
         )
         self.assert_violation("basename 'alpha-note' is not unique")
+
+    def test_inbox_basename_collision_is_a_warning(self) -> None:
+        # "Drop anything into _inbox/" cannot mean "unless you picked a taken name".
+        write(self.vault / "_inbox" / "alpha-note.md", "rough notes about alpha\n")
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertIn("_inbox/alpha-note.md: warning: basename 'alpha-note'", out)
+        self.assertIn("guides/alpha-note.md", out)
+        self.assertIn("1 warning(s)", out)
 
     # --- vault-level -------------------------------------------------------- #
 
