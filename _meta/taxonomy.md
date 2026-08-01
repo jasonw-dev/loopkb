@@ -44,8 +44,10 @@ derives it from there, so an instance that adds a type folder adds its template 
 ## Domain tags (closed vocabulary)
 
 `domains:` may ONLY use values listed in `_meta/instance.md` → "Domain tag
-vocabulary". Adding a value requires a rule-change MR (see `_meta/loop.md`, reflect
-stage) proposed against `_meta/instance.md`, since the vocabulary is instance-owned.
+vocabulary". Adding a value is a rule change against `_meta/instance.md` (the
+vocabulary is instance-owned) and goes through the reflect stage on the channel of
+the active governance mode: direct commit plus a digest risky-action line in
+`autonomous`, an MR in `reviewed` (see `_meta/loop.md`).
 
 `domains: []` is legal on `raw` notes (triage may not know the domain yet); the
 refine stage fills it. A note cannot be promoted to `curated` with empty domains.
@@ -62,7 +64,10 @@ actual repo names (verifiable), not free text.
 - `meetings/` filenames start with the date: `YYYY-MM-DD-<topic>.md` — recurring
   meetings would otherwise collide with the uniqueness rule.
 - **Agents**: a rename is destructive (it breaks inbound links until they are
-  retargeted) → MR channel, retargeting every inbound wikilink in the same MR.
+  retargeted), so it is a risky action either way. `autonomous`: direct commit that
+  retargets every inbound wikilink in the *same* commit, plus a digest risky-action
+  line — a revertable rename must be revertable in one shot. `reviewed`: MR channel,
+  retargeting every inbound wikilink in the same MR.
   **Humans**: rename freely by direct commit — lint reports whatever links went
   dangling and the refine stage repairs them.
 
@@ -85,9 +90,11 @@ record — regardless of whether it arrived via inbox or kb-save).
 
 | Transition | Who | Channel |
 |---|---|---|
-| `raw → curated` | Agent (refine stage) or human | Direct commit, once the curated floor is met |
-| `curated → evergreen` | **Human only** | Human direct commit. An agent may *nominate* by opening an MR that sets `evergreen` — never by committing the promotion to `main` |
-| Demotion (one level down) | Agent or human | Direct commit; reason required in the commit message |
+| `raw → curated` | Agent (refine stage) or human | Direct commit, once the curated floor is met (both modes) |
+| `curated → evergreen` | **Human only, in both governance modes** | Human direct commit. An agent may only *nominate*: in `autonomous`, a `nominate <note> for evergreen: <reason>` line in `_meta/digest.md`, which the human acts on by direct commit or lets lapse; in `reviewed`, an MR that sets `evergreen` for the human to merge. Never by committing the promotion to `main` itself |
+| Demotion (one level down) | Agent or human | Direct commit; reason required in the commit message. Risky action → digest line in `autonomous` |
 
 Demotion lowers a trust claim, so it needs no review. Promotion to `evergreen`
-raises one, so it needs a human.
+raises one, so it needs a human — which is why `autonomous` mode, which otherwise
+lets agents write anything, still stops here. A nomination the human never acts on
+simply lapses; nothing in the loop blocks on it.

@@ -1,12 +1,29 @@
 # Maintenance Loop
 
 The loop is **stateless**: everything it needs is derived from the repo itself
-(inbox contents, frontmatter status, git history) and from the MR platform
-(open and recently closed proposals). It can run from any machine, any time, and
-safely stop midway — the next run picks up naturally.
+(inbox contents, frontmatter status, git history) and — in `reviewed` mode only —
+from the MR platform (open and recently closed proposals). It can run from any
+machine, any time, and safely stop midway — the next run picks up naturally.
 
 Run stages strictly in order. Respect the write tiers in `CLAUDE.md` and any
 overrides in `_meta/instance.md`.
+
+## Mode first
+
+Read `_meta/instance.md` → Governance before Stage 1; absent field ⇒ `autonomous`.
+The mode decides every channel below:
+
+| | `autonomous` (default) | `reviewed` |
+|---|---|---|
+| Destructive actions (merge, delete, move, rename, rewrite) | direct commit + digest "Risky actions" line | branch + MR |
+| `_meta/` rule change (reflect) | direct commit + digest line | branch + MR |
+| Evergreen | digest nomination line | nomination MR |
+| Rejection signal | human `git revert` of a `[kb-loop]`/`[kb-save]` commit | MR closed unmerged + review comments |
+| Platform API needed | **no** — pure git | yes, degrading to git-only |
+| MR budget / branch hygiene | n/a | applies |
+
+Everything additive (triage filings, links, tags, formatting, `raw → curated`) is a
+direct commit in both modes.
 
 ## Stage 0 — Take the lease
 
@@ -42,9 +59,9 @@ For each item in `_inbox/`:
 6. **Skip items already annotated**: if an item already carries a kb-loop callout and
    has had no human modification since the last run (`git log` on the file shows no
    unprefixed commit after the annotating one, and it has no uncommitted changes),
-   leave it untouched and list it in the run report instead of re-annotating.
+   leave it untouched and list it in the digest instead of re-annotating.
 
-Channel: direct commit (additive).
+Channel: direct commit (additive) — both modes.
 
 ## Stage 2 — Refine (push notes up the status ladder)
 
@@ -58,10 +75,11 @@ formatting or frontmatter when that is determinable from the diff). For each:
 
 - Verify the content is still accurate (check the sources it cites, the commands it
   gives, the versions it names).
-- Still accurate → record the check in the run report, change nothing.
+- Still accurate → record the check in the digest, change nothing.
 - Stale but not wrong → demote one level with the reason in the commit message
-  (direct commit — demotion is additive-tier).
-- Wrong, content must change → open a correction MR (rewrite → MR channel).
+  (direct commit in both modes; `autonomous` also logs it as a risky action).
+- Wrong, content must change → rewrite channel: `autonomous` = direct commit plus a
+  digest risky-action line stating what changed and why; `reviewed` = correction MR.
 
 ### 2b — Improve notes (the remaining budget)
 
@@ -71,20 +89,24 @@ Pick notes: all `raw` before any `curated`; within a status, oldest frontmatter
 - Add wikilinks to related notes (search by tags and keywords first).
 - Fix formatting to match the type template; fill missing frontmatter.
 - Promote `raw → curated` when the floor in `_meta/taxonomy.md` is met (direct commit).
-  `curated → evergreen` is human-conferred: an agent may only *nominate* it in an MR.
-- Before proposing any merge/distill: list existing open `kb-loop/*` branches and MRs;
-  skip anything already pending review (the repo alone is not the whole state —
-  the platform holds open proposals). Also skip anything a previous proposal was
-  closed over (Stage 3, rejection memory).
-- If two or more notes overlap heavily: propose a merge via MR. The MR itself
-  deletes the originals (their full text is reviewable in the deleted-file diff)
-  and retargets every inbound wikilink in the same MR — no follow-up commits.
-- If several `troubleshooting` notes share a theme: propose distilling them into
-  one `guides` note (same MR mechanics: originals deleted, inbound links retargeted,
-  everything reviewable in one diff).
+  `curated → evergreen` is human-conferred in both modes: an agent may only *nominate* —
+  a digest line in `autonomous`, an MR in `reviewed`.
+- Before merging or distilling anything, check what has already been rejected
+  (Stage 3, rejection memory) and skip it. In `reviewed` mode additionally list open
+  `kb-loop/*` branches and MRs and skip anything already pending review — the repo
+  alone is not the whole state there, the platform holds open proposals. In
+  `autonomous` mode there is nothing pending by construction: work either landed on
+  `main` or was reverted.
+- If two or more notes overlap heavily: merge them. One commit (or one MR in
+  `reviewed` mode) deletes the originals — their full text stays reviewable in the
+  deleted-file diff — and retargets every inbound wikilink; no follow-up commits.
+- If several `troubleshooting` notes share a theme: distil them into one `guides`
+  note, same mechanics (originals deleted, inbound links retargeted, everything
+  reviewable in one diff).
 
-Channel: direct commit for links/tags/format/`raw → curated`; MR for merge/distill/move/
-rewrite/evergreen nomination.
+Channel: direct commit for links/tags/format/`raw → curated` in both modes. For
+merge/distill/move/rewrite: `autonomous` = direct commit, one digest risky-action line
+per action naming the notes involved and the reason; `reviewed` = MR.
 
 ## Stage 3 — Reflect (learn from human corrections)
 
@@ -95,47 +117,72 @@ The window starts at the **previous run's report commit** (message starting
 scan the full history. (Do NOT use "last `[kb-loop]` commit" as the marker — the
 current run's own triage commits would shrink the window to zero.)
 
-Two kinds of correction signal carry equal weight:
+Two kinds of correction signal carry equal weight. Signal 1 is the same in both
+modes; signal 2 is where the modes differ.
 
 1. **Unprefixed human commits that override agent actions** — moved files, changed
-   types/tags, renamed files, reverted agent commits. Ignore merge commits (e.g.
+   types/tags, renamed files, hand-undone agent edits. Ignore merge commits (e.g.
    platform-generated merges of `kb-loop/*` branches): they carry no prefix but are
    not corrections.
-2. **`[kb-loop]` MRs closed WITHOUT merge** since the last reflect, together with
-   their review comments. A closed proposal is a strong correction signal — a human
-   looked at the agent's reasoning and rejected it — and it feeds pattern analysis
-   exactly like a file-level correction.
 
-**Rejection memory**: a merge or distill proposal that was closed unmerged must NOT
-be re-proposed unless the notes involved have materially changed since (their content
-changed, not just frontmatter or formatting). Record rejected pairs/sets in the run
-report so the next run can see them without the platform.
+2. **The rejection signal, per mode:**
 
-**Platform unavailable** (solo vault, offline, no MR platform): degrade to git-only
-signals. A `kb-loop/*` branch that was deleted locally without ever being merged into
-`main` approximates a rejection; treat it as signal 2. Say in the report that the run
-was git-only.
+   - `autonomous` — **a human `git revert` of a `[kb-loop]` or `[kb-save]` commit**.
+     Find them with `git log --no-merges` over the window and match either the
+     `Revert "<original subject>"` subject or the `This reverts commit <sha>` line
+     git writes into the body; resolve `<sha>` and check whether its subject carries
+     an agent prefix. A revert is an explicit "no" to a specific action — it is the
+     exact equivalent of a closed MR and feeds pattern analysis identically.
+     **This mode needs no platform API at all**: reverts are plain git, so reflect is
+     fully functional offline, in a solo vault, and on any host.
+   - `reviewed` — **`[kb-loop]` MRs closed WITHOUT merge** since the last reflect,
+     together with their review comments. A closed proposal is a strong correction
+     signal: a human looked at the agent's reasoning and rejected it.
+
+**Rejection memory** covers both forms. An action that was rejected — a reverted
+commit in `autonomous`, an unmerged closed MR in `reviewed` — must NOT be redone
+unless the notes involved have materially changed since (their *content* changed, not
+just frontmatter or formatting). Record the rejected pairs/sets and the reverted SHAs
+in the digest so the next run sees them without re-deriving anything.
+
+Nothing distinguishes a revert of a merge from a revert of a rename: the rule is
+per-action. Re-attempting a reverted action without new evidence is the single worst
+failure mode of `autonomous` mode, because it costs the human the same revert twice.
+
+**Platform unavailable** (`reviewed` mode, offline or no MR platform): degrade to
+git-only signals. A `kb-loop/*` branch that was deleted locally without ever being
+merged into `main` approximates a rejection; treat it as signal 2. Say in the digest
+that the run was git-only. In `autonomous` mode this degradation never applies —
+there is no platform in the loop to be unavailable.
 
 ### Analysis
 
 1. Group corrections by kind. A **pattern** is the same kind of correction seen ≥ 2
    times, counted across the full history — the window bounds discovery of NEW
    corrections; pattern counting accumulates.
-2. **Counting resets per pattern** once a proposal addressing that pattern is merged
-   *or* closed: count only corrections that happened after that MR's resolution. A
-   merged proposal fixed the rule; a closed one means the human rejected that reading,
-   and re-proposing on the same old evidence is noise.
-3. Do not propose while an open `[kb-loop]` proposal MR already covers the pattern —
-   dedup against open proposals before drafting anything.
+2. **Counting resets per pattern** once a rule change addressing that pattern lands
+   *or* is rejected: count only corrections that happened after that resolution. A
+   landed change fixed the rule; a rejection (revert in `autonomous`, closed MR in
+   `reviewed`) means the human rejected that reading, and re-proposing on the same
+   old evidence is noise.
+3. `reviewed` mode: do not propose while an open `[kb-loop]` proposal MR already
+   covers the pattern — dedup against open proposals before drafting anything.
+   `autonomous` mode: do not re-apply a rule change the human reverted.
 4. Draft the change to `_meta/taxonomy.md` (framework rules) or `_meta/instance.md`
    (vocabulary, policy) that would have prevented the misclassification.
-5. Open an MR titled `[kb-loop] taxonomy proposal: <summary>` explaining: the observed
-   corrections (with commit refs and closed-MR refs), the proposed rule change, the
-   expected effect.
+5. Land it through the mode's `_meta/` channel:
+   - `autonomous` — commit it to `main` directly, message
+     `[kb-loop] taxonomy change: <summary>`, and give it a digest risky-action line
+     stating the observed corrections (with commit refs), the rule change, and the
+     expected effect. The human reverts the commit if they disagree; that revert is
+     next run's signal 2.
+   - `reviewed` — open an MR titled `[kb-loop] taxonomy proposal: <summary>` with the
+     same explanation (commit refs and closed-MR refs), and wait.
 
-Rules are the constitution — once setup is complete (the domain vocabulary in
-`_meta/instance.md` is non-empty), agents NEVER change `_meta/` outside an MR.
-Instantiation edits before that gate are the one exemption.
+Rules are the constitution. Once setup is complete (the domain vocabulary in
+`_meta/instance.md` is non-empty), a `_meta/` change is never silent: it is either an
+MR (`reviewed`) or a commit itemized in the digest (`autonomous`). Instantiation edits
+before that gate are the one exemption.
 
 ## Stage 4 — Lint (health check)
 
@@ -156,20 +203,26 @@ The agent fixes what the script reports:
   moving files, so updating `type:` to match the folder is a safe auto-fix; never
   "fix" the mismatch by moving the file back.
 - Anything that needs a judgement call (real content decisions, ambiguous link
-  targets, domains that would need a new vocabulary value) goes into the run report,
-  or into the reflect MR when it is a rule problem.
+  targets, domains that would need a new vocabulary value) goes into the digest, or
+  into the reflect rule change when it is a rule problem.
 
-Re-run the script after fixing; the run report states the final exit status.
+Re-run the script after fixing; the digest states the final exit status.
 Instances with CI should run the same command on every push.
 
 ## Per-run limits
 
-- Refine: max 10 notes (freshness check included). Open MRs: max 3 per run, of which
-  1 is reserved for reflect's taxonomy proposal (refine may use at most 2). Hitting a
-  limit skips the remaining work of that stage only — the pipeline always continues
-  through to the final report commit.
+- Refine: max 10 notes (freshness check included), both modes.
+- `reviewed` mode only — open MRs: max 3 per run, of which 1 is reserved for
+  reflect's taxonomy proposal (refine may use at most 2). `autonomous` mode has no
+  MR budget; the refine budget alone bounds the run, and reflect lands at most one
+  rule change per run.
+- Hitting a limit skips the remaining work of that stage only — the pipeline always
+  continues through to the digest and the final report commit.
 
-## MR mechanics
+## MR mechanics (`reviewed` mode only)
+
+Skip this whole section in `autonomous` mode: there are no `kb-loop/*` branches, no
+MRs and no branch hygiene there — every action is a commit on `main`.
 
 - **Push main first**: push all direct-commit work to `origin/main` before creating the
   first MR branch of the run.
@@ -185,21 +238,41 @@ Instances with CI should run the same command on every push.
 - **Rejected inbox items**: commit the annotated item (`[kb-loop]` prefix) so the
   rejection survives across machines and runs. Moving the content to its proper home
   and deleting the item is the human's job.
-- **Report carrier**: every run ends with a dedicated report commit on main, message
-  `[kb-loop] run report: <YYYY-MM-DD>` with the report in the body (use
-  `git commit --allow-empty` when there is nothing else to commit). This commit is
-  also the reflect stage's window marker for the next run.
-- **MR descriptions**: MRs are created mid-run; update their description with the run
-  report after lint completes.
+- **Report carrier**: every run ends by writing `_meta/digest.md` and committing it on
+  `main` with the message `[kb-loop] run report: <YYYY-MM-DD>` and the same digest in
+  the commit body (use `git commit --allow-empty` only if the digest itself is
+  somehow unchanged). This commit is also the reflect stage's window marker for the
+  next run.
+- **MR descriptions** (`reviewed` mode): MRs are created mid-run; update their
+  description with the digest after lint completes.
 - **"Connected to related notes"** (curated criterion) is vacuously satisfied while
-  the vault has no related notes — say so in the MR when it applies. Note that
-  `scripts/lint.py` still requires ≥ 1 wikilink on a `curated` note, so a lone first
-  note stays `raw` until it has a sibling to link to.
+  the vault has no related notes — say so in the digest (and in the MR when one
+  applies). Note that `scripts/lint.py` still requires ≥ 1 wikilink on a `curated`
+  note, so a lone first note stays `raw` until it has a sibling to link to.
 
-## Run report
+## The digest
 
-End every run with the dedicated report commit described above, containing: what was
-triaged (including items skipped as already-annotated), what was refined, which notes
-were freshness-checked, what was proposed, the lint exit status and anything it left
-unfixed, rejected proposals recorded for the next run, and what is stuck and why.
-Copy the report into the MR descriptions when MRs were opened.
+Every run overwrites **`_meta/digest.md`** and repeats it in the report commit body.
+Past digests live in git history — never keep an archive in the file. It is
+framework-managed state under `_meta/`, so `scripts/lint.py` never schema-checks it.
+
+Sections, in this order:
+
+1. **Header** — date, governance mode, machine (the lease holder).
+2. **Risky actions** — FIRST, because it is the only section that can need a human
+   today. In `autonomous` mode, one line per applied risky action: merges (which
+   notes, why), deletions, moves/renames, `_meta/` rule changes, demotions — each
+   with its commit SHA so `git revert <sha>` is copy-pasteable. Write `none` when
+   there were none. In `reviewed` mode this section lists the open MRs awaiting
+   review instead, with their URLs.
+3. **Triage** — what was filed, and items skipped as already-annotated.
+4. **Refine** — what was improved, which notes were freshness-checked and the verdict.
+5. **Reflect** — corrections observed, patterns counted, what was landed or proposed,
+   and the rejection memory (reverted SHAs / closed MRs) carried to the next run.
+6. **Lint** — the exit status and anything left unfixed.
+7. **Stuck** — inbox items that need human context, and what context each needs.
+8. **Nominations** — `nominate <note> for evergreen: <reason>`, one per line.
+   Un-acted nominations lapse; the next run may re-nominate.
+
+A human reading only the header, "Risky actions" and "Stuck" must be able to decide
+whether to act. Everything else is the audit trail.
