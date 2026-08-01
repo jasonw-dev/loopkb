@@ -23,6 +23,10 @@ only a changed *skeleton* needs manual merging. The cost: any customization outs
 `instance.md` will conflict on merge, which is deliberate — it is the signal to
 express the customization as a policy override instead.
 
+*Extended by D8.* The instance-owned set grew by one field — the governance mode —
+while the *definitions* of the two modes stay framework-owned (`CLAUDE.md`,
+`_meta/loop.md`). The instance picks; the framework says what the pick means.
+
 ## D2 — Plugin wrapper over vault-local skills
 
 **Context.** The three skills are most useful in *other* repos (kb-search while
@@ -72,6 +76,11 @@ git-only signals (a deleted unmerged `kb-loop/*` branch approximates a rejection
 advances its understanding. The cost is a platform dependency for full fidelity, which
 the git-only degradation bounds rather than removes.
 
+*Superseded in part by D8.* The principle stands, the mechanism became mode-dependent:
+closed MRs are the rejection signal in `reviewed` mode only. In `autonomous` mode the
+signal is a human `git revert` of a prefixed agent commit, which removes the platform
+dependency entirely rather than bounding it — reflect is then pure git.
+
 ## D5 — A lease, not an assumption
 
 **Context.** The loop is stateless and runnable from any machine — which also means two
@@ -102,6 +111,11 @@ own work, which makes the label mean only "an agent liked this".
 which is what makes kb-search's trust order worth obeying. Evergreen therefore grows
 only as fast as human attention allows, which is the intended rate.
 
+*Amended by D8 (decision intact, channel widened).* Human-conferred in both governance
+modes — this is the one rule `autonomous` mode does not relax. Only the nomination
+channel differs: an MR in `reviewed` mode, a digest line in `autonomous`, which the
+human promotes by direct commit or lets lapse.
+
 ## D7 — Freshness is checked, not assumed
 
 **Context.** Promotion is one-directional in practice: notes climb to `curated` or
@@ -116,3 +130,56 @@ oldest and verifies they are still accurate. Stale → demote one level with a r
 **Consequence.** Every note is eventually re-examined at a bounded, predictable cost per
 run, and the status ladder becomes two-directional. Older notes are checked first, so
 staleness is caught roughly in the order it accumulates.
+
+*Superseded in part by D8.* "Wrong → correction MR" is the `reviewed`-mode channel;
+in `autonomous` mode the correction is a direct commit itemized in the digest.
+
+## D8 — Governance modes: pre-approval or post-hoc revert
+
+**Context.** Every destructive action the agent wanted to take — merging duplicates,
+deleting, renaming, changing a rule — waited in a merge request for one person. That
+made the vault owner a blocking dependency of the loop: proposals queue up, the weekly
+run's most valuable work is exactly the work that stalls, and the framework's own
+premise ("the vault gets better over time") depends on someone's review latency. The
+review also assumes an MR platform exists and that `main` is not the natural place to
+work — neither is true for a solo vault or a personal one. Meanwhile git already offers
+an undo that is cheaper than an approval: `git revert`.
+
+**Decision.** Safety becomes a per-instance choice between two named modes, declared in
+`_meta/instance.md` → Governance, with the definitions in `CLAUDE.md` and the
+stage-level effects in `_meta/loop.md`.
+
+- **`autonomous`, the framework default** — default-open plus audit. Agents perform
+  every operation by direct commit to `main`: merges, deletions, moves, renames,
+  rewrites, and `_meta/` rule changes (taxonomy changes auto-apply). In exchange every
+  risky action is itemized, with its SHA, at the top of the run digest. The human reads
+  the digest and reverts what they disagree with. A revert of a `[kb-loop]`/`[kb-save]`
+  commit is read by reflect exactly as a closed MR was: the action is not redone unless
+  the notes involved materially changed, and it feeds pattern analysis. Because reverts
+  are plain git, reflect needs **no platform API at all** in this mode.
+- **`reviewed`** — the previous behaviour verbatim, now opt-in: destructive tier and
+  taxonomy changes via MR, closed-MR and review-comment signals, branch hygiene, the
+  3-MR budget with a slot reserved for reflect. For teams where agent trust is not yet
+  established, or where `main` is protected.
+
+Two things do not move. `evergreen` stays human-conferred in both modes — in
+`autonomous` the agent nominates with a digest line the human may act on or ignore, so
+it creates zero forced work. And the guardrails are mode-independent: the lease, the
+linter, no force-push on `main`, originals reviewable in git history after a merge, and
+the agent commit prefixes.
+
+The run report becomes **`_meta/digest.md`**, overwritten every run (git history keeps
+the old ones) and repeated in the report commit body. "Risky actions" is its first
+section precisely because it is the only part that can require action today.
+
+**Consequence.** The loop stops waiting on humans: throughput is bounded by the run
+budget rather than by review latency, and a solo vault with no MR platform is now a
+first-class case instead of a degradation. Review cost drops from "approve N proposals"
+to "read one page, revert what is wrong" — and un-acted items cost nothing, since
+lapsing is the safe default for nominations and silence is consent for everything else.
+The price is real: a wrong action is live until someone notices, so the digest's
+completeness is now load-bearing — an unreported risky action is a framework violation,
+not a formatting slip. It also demands that every risky action be one self-contained,
+revertable commit (a merge deletes originals and retargets links in the same commit),
+and it makes `autonomous` unusable where branch protection forbids direct pushes to
+`main`, which is exactly when an instance should pick `reviewed`.
