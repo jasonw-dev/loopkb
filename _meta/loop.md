@@ -61,6 +61,18 @@ List the rest in the run report.
 
 - Refine: max 10 notes. Open MRs: max 3 per run. If limits hit, stop — next run continues.
 
+## Mechanics clarifications
+
+- **Rejected inbox items**: commit the annotated item (`[kb-loop]` prefix) so the
+  rejection survives across machines and runs. Moving the content to its proper home
+  and deleting the item is the human's job.
+- **Report carrier**: if the run's final stages produced no main-branch commit, put
+  the report in an empty commit (`git commit --allow-empty`) on main.
+- **MR descriptions**: MRs are created mid-run; update their description with the run
+  report after lint completes.
+- **"Connected to related notes"** (curated criterion) is vacuously satisfied while
+  the vault has no related notes — say so in the MR when it applies.
+
 ## Run report
 
 End every run by writing a short report (what was triaged, refined, proposed, linted;
