@@ -1,0 +1,17 @@
+{
+  "name": "loopkb",
+  "description": "The loopkb framework's Claude Code skills.",
+  "owner": {
+    "name": "jasonw-dev",
+    "url": "https://github.com/jasonw-dev"
+  },
+  "plugins": [
+    {
+      "name": "loopkb",
+      "source": "./",
+      "description": "Knowledge-base skills for a loopkb vault: kb-save, kb-search, kb-loop.",
+      "category": "productivity",
+      "tags": ["knowledge-base", "obsidian", "notes"]
+    }
+  ]
+}

@@ -14,10 +14,13 @@ appends to:
 - **Auto-classification** — drop anything into `_inbox/`; the agent classifies it
   against explicit, versioned rules.
 - **Maintenance loop** — a stateless 4-stage pipeline (triage → refine → reflect →
-  lint) that keeps improving the vault: linking, merging, distilling.
-- **Rule evolution** — when humans correct the agent's filing, the reflect stage mines
-  those corrections from git history and proposes rule changes via merge request.
-  The taxonomy learns.
+  lint) that keeps improving the vault: linking, merging, distilling, re-checking
+  old notes for staleness.
+- **Rule evolution** — when humans correct the agent's filing — by fixing it directly,
+  or by closing the agent's merge request — the reflect stage mines those corrections
+  and proposes rule changes via merge request. The taxonomy learns.
+- **Executable schema** — `scripts/lint.py` (stdlib-only Python 3) is the definition
+  of what a valid note is, so "is the vault healthy?" has a deterministic answer.
 
 ## Architecture
 
@@ -26,13 +29,16 @@ appends to:
   (MR diffs), and rollback layer.
 - **Type folders × domain tags.** The stable axis (note type: troubleshooting,
   decisions, guides, references, meetings) is folders; the growing axis (domains) is a
-  closed tag vocabulary in `_meta/taxonomy.md`.
+  closed tag vocabulary declared by the instance.
 - **Framework vs. instance.** This template carries the structure, schema, skills, and
-  rule *formats*. Each instance (a team KB, a personal second brain) fills in its own
-  vocabulary and policies. Scale by adding vaults, not by deepening one.
+  rule *formats*. Every instance-specific setting lives in exactly one file,
+  `_meta/instance.md` — so an instance can pull template updates with a plain
+  `git merge upstream/main` and never hit a conflict in its own configuration.
+  Scale by adding vaults, not by deepening one.
 - **Write tiers.** For agents, additive operations commit straight to main;
   destructive ones (merge, delete, move, rule changes) go through MRs a human
-  reviews. Humans always commit freely — their unprefixed commits are the
+  reviews. `evergreen` status is human-conferred — agents may nominate, never
+  promote. Humans always commit freely — their unprefixed commits are the
   correction signal the taxonomy learns from.
 
 ## What it looks like
@@ -40,7 +46,8 @@ appends to:
 ```
 vault/
 ├── _inbox/            ← drop anything here; the loop classifies it
-├── _meta/             ← taxonomy, loop spec, note templates
+├── _meta/             ← instance config, taxonomy, loop spec, note templates
+├── scripts/           ← lint.py (schema check) · lease.py (one loop run at a time)
 ├── troubleshooting/   ← symptom → cause → fix
 ├── decisions/         ← lightweight ADRs
 ├── guides/            ← how-to
@@ -71,11 +78,32 @@ CI release job fails with checksum mismatch after a dependency bump.
 
 1. Create a repo from this template.
 2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — three daily actions, plus
-   instance setup.
+   instance setup (one file to fill in) and how to pull template updates.
 3. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).
 
-Requirements: git, [Claude Code](https://claude.com/claude-code) (primary agent;
-skills in `.claude/skills/`). Other agents work through the same rule files in `_meta/`.
+Requirements: git, Python 3 (stdlib only, for `scripts/`),
+[Claude Code](https://claude.com/claude-code) as the primary agent. Other agents work
+through the same rule files in `_meta/`.
+
+## Using the skills outside a vault
+
+The vault's three skills live in `.claude/skills/` and load automatically when you
+open the vault itself. To get them in *other* repos — so `kb-save` and `kb-search`
+work while you are debugging some project — install this repo as a Claude Code plugin:
+
+```
+/plugin marketplace add jasonw-dev/loopkb
+/plugin install loopkb@loopkb
+```
+
+They then appear as `/loopkb:kb-save`, `/loopkb:kb-search`, `/loopkb:kb-loop`.
+The plugin manifest points straight at `.claude/skills/`, so the vault's skill files
+remain the single source of truth — there is no second copy to drift.
+
+## Design
+
+The reasoning behind the framework's load-bearing choices is recorded in
+[docs/design-decisions.md](docs/design-decisions.md).
 
 ## License
 
@@ -88,8 +116,10 @@ MIT
 loopkb 是給 AI Agent 用的知識庫框架：Obsidian 相容、git 原生、會自我改善。
 
 核心差異在 **loop engineering**——知識庫不是「寫入就結束」：agent 定期跑四階段維護迴圈
-（歸檔 → 精煉 → 反省 → 健檢），持續補連結、合併重複、蒸餾筆記；而人類對 agent 分類的修正
-會被反省階段從 git 歷史挖出來，變成分類規則的修改提案（走 MR）——規則會學習。
+（歸檔 → 精煉 → 反省 → 健檢），持續補連結、合併重複、蒸餾筆記、重新檢查老筆記是否過期；
+而人類對 agent 分類的修正（直接改掉，或把 agent 開的 MR 關掉不合併）會被反省階段挖出來，
+變成分類規則的修改提案（走 MR）——規則會學習。
 
 結構上：型態用資料夾、領域用封閉 tag 字彙；框架（本 template）與實例（各團隊/個人 vault）
-分離，規模化靠開新 vault 而非加深單一 vault。從 [GETTING-STARTED.md](GETTING-STARTED.md) 開始。
+分離，實例設定全部集中在 `_meta/instance.md` 一個檔案，所以拉模板更新只要 `git merge upstream/main`
+就好。規模化靠開新 vault 而非加深單一 vault。從 [GETTING-STARTED.md](GETTING-STARTED.md) 開始。

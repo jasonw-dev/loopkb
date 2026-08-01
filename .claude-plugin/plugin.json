@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "loopkb",
+  "displayName": "loopkb",
+  "description": "Knowledge-base skills for a loopkb vault: kb-save, kb-search, kb-loop.",
+  "version": "1.0.0",
+  "author": {
+    "name": "jasonw-dev",
+    "url": "https://github.com/jasonw-dev"
+  },
+  "homepage": "https://github.com/jasonw-dev/loopkb",
+  "repository": "https://github.com/jasonw-dev/loopkb",
+  "license": "MIT",
+  "keywords": ["knowledge-base", "obsidian", "notes", "maintenance-loop"],
+  "skills": ["./.claude/skills/"]
+}
