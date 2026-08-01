@@ -34,6 +34,11 @@ instantiation — a one-off mechanical resolution documented in GETTING-STARTED.
 while the *definitions* of the two modes stay framework-owned (`CLAUDE.md`,
 `_meta/loop.md`). The instance picks; the framework says what the pick means.
 
+*Extended by D12.* It grew again, and this time by the thing the loop produces: the
+classification rules reflect learns are instance-owned amendments in `_meta/instance.md`,
+not edits to the framework's `_meta/taxonomy.md`. Without that move this decision's own
+merge recipe would have deleted them.
+
 ## D2 — Plugin wrapper over vault-local skills
 
 **Context.** The three skills are most useful in *other* repos (kb-search while
@@ -94,6 +99,15 @@ the git-only degradation bounds rather than removes.
 closed MRs are the rejection signal in `reviewed` mode only. In `autonomous` mode the
 signal is a human `git revert` of a prefixed agent commit, which removes the platform
 dependency entirely rather than bounding it — reflect is then pure git.
+
+*Superseded in part by D12.* Two corrections. Rejection *memory* is re-derived from the
+full history on every run rather than carried forward in the digest — this decision's
+"record the rejected pairs" instruction made a display document load-bearing. And the
+git-only degradation above is withdrawn: "a deleted unmerged `kb-loop/*` branch
+approximates a rejection" guesses at the one signal that must not be guessed, since a
+wrong rejection suppresses a correct action forever and branch deletion is as often
+hygiene after a merge. Reflect now runs on signal 1 alone when the platform is
+unreachable, and says so in the digest.
 
 ## D5 — A lease, not an assumption
 
@@ -201,7 +215,22 @@ and it makes `autonomous` unusable where branch protection forbids direct pushes
 *Hardened by D10: digest completeness is now machine-checked.* The load-bearing promise
 of this decision — every risky action appears in the digest — stopped being a promise:
 `scripts/verify_digest.py` re-derives the risky actions from git and fails the run when
-one has no digest line.
+one has no digest line. Four of the five classes, precisely: a rewrite that changes a
+note's meaning is indistinguishable from reformatting in a diff, so that line still rests
+on the agent's honesty, with git and the freshness check (D7) as its recovery path. The
+docs now say which is which rather than claiming the check covers everything.
+
+*Amended by D12, twice.* "Taxonomy changes auto-apply" survives as a property but not as
+a file: the rule change lands as an amendment in `_meta/instance.md`, and `_meta/taxonomy.md`
+became read-only for agents. And the digest is confirmed as **display**, not state — the
+rejection memory it lists is re-derived each run, so this decision's one artefact carries
+no information the loop depends on.
+
+*Narrowed in passing.* `reviewed` mode now requires an MR platform; the documented
+fallback (branch + local `git diff main...` review + merge, for a repo without one) is
+cut. The team it served — wanting pre-approval, owning no MR platform — is the empty set
+in practice, and `autonomous` mode is precisely the design for a vault with no platform,
+so the fallback only offered a worse version of a mode that already fits.
 
 ## D9 — Onboarding is a skill, not a checklist
 
@@ -319,3 +348,58 @@ every agent, an inaccurate name kept deliberately so the contract has one defini
 instead of one per vendor; and `integrations/` joins `docs/`, `scripts/` and `tests/` in
 the linter's non-note directories, since a `SKILL.md` under it is not a note and four of
 them would otherwise collide on basename uniqueness.
+
+## D12 — Learned rules are instance-owned; rejection memory is derived, not carried
+
+**Context.** A final pre-freeze review put two of the framework's own promises side by
+side and found they could not both be kept.
+
+The first is a collision between D1 and D4. D4 gave the loop a way to learn: reflect
+mines human corrections and changes the classification rules. Those changes were written
+to `_meta/taxonomy.md`. D1 gave every instance a way to stay current: template updates
+arrive as `git merge upstream/main`, and the documented first-merge resolution is
+`git checkout --theirs -- .` — framework files take upstream. `_meta/taxonomy.md` is a
+framework file. So the first update an instance pulled would silently delete every rule
+its own corrections had taught it, and "the taxonomy learns" and "updates are one merge"
+were each true only while the other went unused.
+
+The second is a chain of prose copying. Rejection memory — the set of actions a human
+already said no to, which reflect must never re-attempt — was to be "recorded in the
+digest so the next run sees it without re-deriving anything". That makes a human-facing
+report into machine state: it survives only as long as each run faithfully copies the
+previous run's list forward, a hand-off with no check on it, in a loop whose stated
+premise (D5, D8) is that it is stateless and can safely stop midway. A digest that is
+lost, truncated under budget pressure, or edited by the human who wrote a note in it
+takes the loop's memory with it.
+
+**Decision.** Split ownership by who *produces* the content, not by which file feels
+like rules.
+
+- **`_meta/taxonomy.md` is framework-owned and read-only for agents.** It carries the
+  rule *format* and the framework's defaults, and a template merge may overwrite it
+  wholesale without losing anything.
+- **`_meta/instance.md` gains "Classification rule amendments"** — dated entries that
+  extend or override the taxonomy, written by reflect (Stage 3) on the channel of the
+  active governance mode. Agents read the taxonomy and the amendments together on every
+  classification, and **the amendment wins**. The vocabulary and policy sections of the
+  same file already worked this way; type criteria, naming and source rules now join them.
+- **Rejection memory is re-derived from scratch every run**, never copied forward: in
+  `autonomous` mode by walking the FULL history for reverts (`git log --no-merges
+  --grep="This reverts"`), resolving each reverted SHA and keeping the agent-prefixed
+  ones; in `reviewed` mode by querying the platform's closed-MR list per run. The digest
+  still lists the set — for the human, as display only.
+
+**Consequence.** The two promises hold simultaneously and the merge recipe can now say so
+plainly: `git checkout --theirs -- .` cannot touch a learned rule, because no learned rule
+lives in a framework file. The digest returns to being a report — losing one, or reading a
+stale one, costs the loop nothing, which is what "stateless" was supposed to mean.
+
+The prices are real and accepted. Classification now reads two places instead of one, so
+an agent that skips the amendments silently uses stale rules — mitigated only by every
+skill and stage saying to read both, and by the amendments living in the file agents
+already must read for the vocabulary. Amendments accumulate in the one file a human edits
+by hand, so a long-lived vault's instance.md grows a rule log that nobody prunes; entries
+are removable by hand, and a human's revert of one is itself the rejection signal that
+stops it coming back. And re-deriving the rejection set costs a full-history `git log`
+every run — cheap now, linear in history forever, and the price of not trusting a document
+to be a database.
