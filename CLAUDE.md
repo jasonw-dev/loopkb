@@ -87,7 +87,9 @@ Filing an item OUT of `_inbox/` is triage, which is additive → direct commit.
 "Rewrite" boundary: reformatting that preserves meaning (layout, frontmatter fill,
 typo fixes) is additive; changing or removing semantic content is a rewrite.
 In `reviewed` mode a distillation that would end at `evergreen` travels as one MR:
-the human merging it is the human conferring the status.
+the human merging it is the human conferring the status. In `autonomous` mode the
+same distillation lands as a `curated` note by direct commit, and the agent nominates
+it for `evergreen` in the digest — an agent never writes `evergreen` itself.
 
 **MR fallback** (`reviewed` mode only): in a repo without an MR/PR platform, the MR
 channel degrades to: commit on a branch `kb-loop/<topic>-<YYYYMMDD>`, have the human

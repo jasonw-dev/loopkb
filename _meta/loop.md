@@ -27,8 +27,9 @@ direct commit in both modes.
 
 ## Stage 0 — Take the lease
 
-Only one loop run may be in flight at a time; two concurrent runs produce
-duplicate proposals and rebase storms.
+Only one loop run may be in flight at a time; two concurrent runs produce duplicate
+work (competing commits in `autonomous`, duplicate proposals in `reviewed`), rebase
+storms, and two digests that each describe half a run. This holds in both modes.
 
 ```
 python3 scripts/lease.py acquire      # exit 1 = someone else is running; stop
@@ -123,7 +124,8 @@ modes; signal 2 is where the modes differ.
 1. **Unprefixed human commits that override agent actions** — moved files, changed
    types/tags, renamed files, hand-undone agent edits. Ignore merge commits (e.g.
    platform-generated merges of `kb-loop/*` branches): they carry no prefix but are
-   not corrections.
+   not corrections. A revert commit is unprefixed too — classify it as signal 2 and
+   count it **once**, not as both signals.
 
 2. **The rejection signal, per mode:**
 

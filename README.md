@@ -25,8 +25,8 @@ appends to:
 ## Architecture
 
 - **Vault = git repo = Obsidian vault.** Notes are plain Markdown + YAML frontmatter.
-  Humans use Obsidian; agents use the filesystem. Git is the sync, review
-  (MR diffs), and rollback layer.
+  Humans use Obsidian; agents use the filesystem. Git is the sync layer, the review
+  layer (diffs — post-hoc via the digest, or in MRs), and the undo layer (`git revert`).
 - **Type folders × domain tags.** The stable axis (note type: troubleshooting,
   decisions, guides, references, meetings) is folders; the growing axis (domains) is a
   closed tag vocabulary declared by the instance.
