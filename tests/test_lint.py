@@ -1,0 +1,211 @@
+"""scripts/lint.py — one test per violation class it knows about.
+
+Each test starts from a vault that lints clean, introduces exactly one defect,
+and asserts both the exit code and the message, so a rule cannot be silently
+dropped without a test noticing.
+"""
+
+from __future__ import annotations
+
+import sys
+
+from helpers import SCRIPTS, TempDirTestCase, add_clean_pair, make_vault, write
+
+
+class LintTest(TempDirTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.vault = make_vault(self.tmp / "vault")
+        add_clean_pair(self.vault)
+
+    def lint(self) -> tuple[int, str]:
+        proc = self.script("lint.py", str(self.vault))
+        return proc.returncode, proc.stdout + proc.stderr
+
+    def assert_violation(self, fragment: str) -> None:
+        code, out = self.lint()
+        self.assertEqual(code, 1, f"expected a violation, got exit 0:\n{out}")
+        self.assertIn(fragment, out)
+
+    # --- the clean baseline ------------------------------------------------- #
+
+    def test_clean_vault_passes(self) -> None:
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertIn("lint: clean", out)
+        self.assertIn("2 note(s) checked", out)
+
+    # --- frontmatter -------------------------------------------------------- #
+
+    def test_missing_frontmatter(self) -> None:
+        write(self.vault / "guides" / "no-frontmatter.md", "# Just a heading\n")
+        self.assert_violation("missing YAML frontmatter block")
+
+    def test_unparseable_frontmatter_line(self) -> None:
+        write(
+            self.vault / "guides" / "bad-line.md",
+            "---\ntype: guides\n!!! not a key\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Bad\n",
+        )
+        self.assert_violation("unparseable frontmatter line")
+
+    def test_missing_required_keys(self) -> None:
+        write(self.vault / "guides" / "sparse-note.md", "---\ntype: guides\n---\n# Sparse\n")
+        code, out = self.lint()
+        self.assertEqual(code, 1, out)
+        for key in ("domains", "created", "source", "status"):
+            self.assertIn(f"missing required frontmatter key: {key}", out)
+
+    def test_type_does_not_match_folder(self) -> None:
+        write(
+            self.vault / "guides" / "wrong-type.md",
+            "---\ntype: troubleshooting\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Wrong\n",
+        )
+        self.assert_violation("does not match its folder 'guides'")
+
+    def test_status_outside_the_enum(self) -> None:
+        write(
+            self.vault / "guides" / "bad-status.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: golden\n---\n# Bad status\n",
+        )
+        self.assert_violation("status 'golden' is not one of")
+
+    def test_source_outside_the_enum(self) -> None:
+        write(
+            self.vault / "guides" / "bad-source.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: telepathy\nstatus: raw\n---\n# Bad source\n",
+        )
+        self.assert_violation("source 'telepathy' is not one of")
+
+    def test_created_is_not_a_date(self) -> None:
+        write(
+            self.vault / "guides" / "bad-date.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: yesterday\n"
+            "source: inbox\nstatus: raw\n---\n# Bad date\n",
+        )
+        self.assert_violation("created 'yesterday' is not a YYYY-MM-DD date")
+
+    # --- domains ------------------------------------------------------------ #
+
+    def test_domain_outside_the_vocabulary(self) -> None:
+        write(
+            self.vault / "guides" / "unknown-domain.md",
+            "---\ntype: guides\ndomains: [quantum]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Unknown domain\n",
+        )
+        self.assert_violation("domain 'quantum' is not in the vocabulary")
+
+    def test_empty_domains_on_a_curated_note(self) -> None:
+        write(
+            self.vault / "guides" / "no-domains.md",
+            "---\ntype: guides\ndomains: []\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: curated\n---\n# No domains\n\n[[alpha-note]]\n",
+        )
+        self.assert_violation("domains may only be empty on raw notes")
+
+    def test_empty_domains_on_a_raw_note_is_allowed(self) -> None:
+        write(
+            self.vault / "guides" / "raw-no-domains.md",
+            "---\ntype: guides\ndomains: []\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Raw\n",
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+
+    # --- links -------------------------------------------------------------- #
+
+    def test_curated_note_without_a_wikilink(self) -> None:
+        write(
+            self.vault / "guides" / "lonely-note.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: curated\n---\n# Lonely\n",
+        )
+        self.assert_violation("must link to at least one related note")
+
+    def test_dangling_wikilink(self) -> None:
+        write(
+            self.vault / "guides" / "dangling-link.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Dangling\n\n[[nowhere-note]]\n",
+        )
+        self.assert_violation("wikilink [[nowhere-note]] has no matching note")
+
+    # --- filenames ---------------------------------------------------------- #
+
+    def test_non_kebab_filename(self) -> None:
+        write(
+            self.vault / "guides" / "Not_Kebab.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Not kebab\n",
+        )
+        self.assert_violation("filename must be kebab-case English")
+
+    def test_undated_meeting_filename(self) -> None:
+        write(
+            self.vault / "meetings" / "team-sync.md",
+            "---\ntype: meetings\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: meeting\nstatus: raw\n---\n# Sync\n",
+        )
+        self.assert_violation("filename must start with the meeting date")
+
+    def test_dated_meeting_filename_passes(self) -> None:
+        write(
+            self.vault / "meetings" / "2026-08-01-team-sync.md",
+            "---\ntype: meetings\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: meeting\nstatus: raw\n---\n# Sync\n",
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+
+    def test_duplicate_basename_across_folders(self) -> None:
+        write(
+            self.vault / "troubleshooting" / "alpha-note.md",
+            "---\ntype: troubleshooting\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Duplicate\n",
+        )
+        self.assert_violation("basename 'alpha-note' is not unique")
+
+    # --- vault-level -------------------------------------------------------- #
+
+    def test_missing_instance_file(self) -> None:
+        (self.vault / "_meta" / "instance.md").unlink()
+        self.assert_violation("_meta/instance.md: missing")
+
+    def test_note_in_a_non_type_folder_warns_without_failing(self) -> None:
+        write(
+            self.vault / "notes" / "stray.md",
+            "---\ntype: notes\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Stray\n",
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertIn("warning", out)
+        self.assertIn("'notes' is not a type folder", out)
+        self.assertIn("1 warning(s)", out)
+
+    def test_inbox_notes_are_never_warned_about(self) -> None:
+        write(self.vault / "_inbox" / "rough-idea.md", "some unclassified text\n")
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("warning", out)
+
+    # --- import safety ------------------------------------------------------ #
+
+    def test_lint_is_importable_and_callable(self) -> None:
+        sys.path.insert(0, str(SCRIPTS))
+        self.addCleanup(sys.path.remove, str(SCRIPTS))
+        import lint  # noqa: PLC0415 — importing under test is the point
+
+        problems, warnings, checked = lint.lint(self.vault)
+        self.assertEqual(problems, [])
+        self.assertEqual(warnings, [])
+        self.assertEqual(checked, 2)
+
+
+if __name__ == "__main__":
+    import unittest
+
+    unittest.main()
