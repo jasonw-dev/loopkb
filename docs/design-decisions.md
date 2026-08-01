@@ -53,6 +53,10 @@ the plugin is structurally impossible and no generation step exists to forget to
 *Extended by D9.* The plugin gained a fourth skill, `kb-setup`, which turns the plugin
 from "the skills work anywhere" into "installing the plugin is the whole onboarding".
 
+*Extended by D11.* The "one copy, no drift" property is the reusable part of this
+decision, not the plugin format: `integrations/` gives other agents their own thin entry
+points that resolve to the same `.claude/skills/` files.
+
 ## D3 — The linter is the schema
 
 **Context.** The lint stage was a prose checklist, so "is this note valid?" depended on
@@ -266,3 +270,46 @@ lease is slightly less forgiving (a run whose process died is cleared by `releas
 TTL, not inherited by the next terminal), and that changing a linter rule now means
 changing its test too. All three are the intended price: they make the rule harder to
 change accidentally, which is what a rule binding every instance should be.
+
+## D11 — Per-platform entry points, one procedure
+
+**Context.** The rule system was agent-agnostic from the start — `AGENTS.md`, `CLAUDE.md`,
+`_meta/*.md` and `scripts/` are plain files any agent can read — but the *procedures* were
+packaged for exactly one agent. `.claude/skills/*/SKILL.md` load automatically only in
+Claude Code, and D2's plugin, the thing that makes them available in other repos, is a
+Claude Code format. So "any agent works here" was true of the rules and false of the
+ergonomics: a Codex user could be told to read a SKILL.md, but nothing made it happen, and
+onboarding (D9's one-sentence `kb-setup`) had no equivalent at all. The tempting fixes are
+both wrong: rewriting the skills into some neutral format abandons the agent most people
+use, and copying them per platform reintroduces exactly the drift D2 designed away.
+
+**Decision.** Keep `.claude/skills/*/SKILL.md` as the single definition of every
+procedure, and add `integrations/<platform>/` — thin, per-platform *entry points* that
+resolve the vault and then read the vault's own SKILL.md. The first is
+`integrations/codex/`: four Codex skills of about a dozen lines each, installed to
+`~/.agents/skills/`, each of which locates `KB_VAULT` and hands off to
+`<KB_VAULT>/.claude/skills/<name>/SKILL.md`. `kb-setup` is the one asymmetric case — there
+is no vault to read from yet — so it falls back to the framework copy of that same file
+over HTTPS rather than restating the steps. Onboarding documentation splits by platform
+(Claude Code / Codex CLI / any other agent) rather than treating non-Claude agents as a
+footnote, and the manual path says plainly that it does clone the vault itself.
+
+Verified rather than assumed, because it moved: Codex's custom prompts
+(`~/.codex/prompts/<name>.md`, `/prompts:<name>`) are deprecated in favour of skills, so
+the integration targets skills and mentions prompts only as a legacy fallback. Codex reads
+`AGENTS.md` from `$CODEX_HOME` and from the repo root down, which is what makes the
+optional global snippet possible; and its default sandbox denies network access, so every
+git operation the skills perform surfaces as an approval prompt — documented rather than
+worked around.
+
+**Consequence.** Adding a platform is a directory of pointers, not a fork of the
+procedures: there is still exactly one copy of each SKILL.md, and a change to a procedure
+reaches every agent with no regeneration step. The cost is a small per-platform surface
+that can rot when a vendor changes its conventions — the prompts-to-skills move happened
+before this decision was even written — which is why each integration README states the
+mechanism and its doc source, so a stale one is recognisable rather than merely broken.
+Two smaller prices: the per-user wiring file stays at `~/.claude/<vault-name>.md` for
+every agent, an inaccurate name kept deliberately so the contract has one definition
+instead of one per vendor; and `integrations/` joins `docs/`, `scripts/` and `tests/` in
+the linter's non-note directories, since a `SKILL.md` under it is not a note and four of
+them would otherwise collide on basename uniqueness.
