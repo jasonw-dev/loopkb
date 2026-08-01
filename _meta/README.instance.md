@@ -10,7 +10,7 @@ engineering knowledge for the platform group: build and CI failures, environment
 release procedures, and the decisions behind them. Notes are Markdown; an AI agent files
 and maintains them; git is the sync, review and undo layer.">
 
-**[▶ Visual intro（視覺化導覽）](https://jasonw-dev.github.io/loopkb/)** — a 3-minute illustrated tour of how the loop works.
+**[▶ Visual intro（視覺化導覽）](https://jasonw-dev.github.io/loopkb/)** — a 3-minute illustrated tour of how the loop works (page in zh-Hant).
 
 ## Joining this vault (once per machine)
 

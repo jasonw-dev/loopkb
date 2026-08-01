@@ -178,8 +178,8 @@ footer a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-o
     <div class="card"><span class="step">3</span><h3>Reflect 歸納</h3>
       <p>下一圈從 git 歷史認出「人推翻了 agent」，同類修正 ≥ 2 次就成為 pattern。</p></div>
     <div class="card"><span class="step">4</span><h3>規則更新</h3>
-      <p>更新分類規則——autonomous 模式直接生效並列入 digest,reviewed 模式開 MR 等你批。
-      之後同樣的錯不再犯,分類越用越準。</p></div>
+      <p>更新分類規則——autonomous 模式直接生效並列入 digest，reviewed 模式開 MR 等你批。
+      規則寫進 instance 設定檔（不是框架檔），所以之後拉模板更新也不會被蓋掉；同樣的錯不再犯，分類越用越準。</p></div>
   </div>
 </section>
 
@@ -202,29 +202,30 @@ footer a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-o
 <section>
   <span class="eyebrow">Get started</span>
   <h2>怎麼開始用</h2>
-  <p class="sub">兩種角色:<b>建立者</b>做步驟 1（每團隊一次）;<b>成員</b>做步驟 2–3（每人每台機器一次）。
-  全程不需要自己 git clone——plugin 由 Claude Code 自動抓取,vault 由 kb-setup 代勞。</p>
+  <p class="sub">兩種角色：<b>建立者</b>做步驟 1（每團隊一次）；<b>成員</b>做步驟 2–3（每人每台機器一次）。
+  走 Claude Code 或 Codex CLI 的路徑不需要自己 git clone——入口由工具安裝，vault 由 kb-setup 代勞；
+  其他 agent 走手動路徑，那條路徑要自己 clone。</p>
   <div class="steps">
     <div class="step-row"><div><b>建立 vault（每個團隊一次）</b>
       <div class="d">從 <a href="https://github.com/jasonw-dev/loopkb">loopkb template</a> 按
       「Use this template」開一個新 repo，然後照 repo 裡 GETTING-STARTED 的 checklist
       填好 <code>_meta/instance.md</code>（語言、知識範圍、tag 字彙、治理模式）。
       做完把 repo 網址發給團隊，並給每個人 repo 的 write access
-      （autonomous 模式下,大家都要能直接 push）。</div></div></div>
+      （autonomous 模式下，大家都要能直接 push）。</div></div></div>
     <div class="step-row"><div><b>裝入口（每人一次，全域生效，依你用的 agent 擇一）</b>
-      <div class="d"><b>Claude Code</b> — 裝 plugin:
+      <div class="d"><b>Claude Code</b> — 裝 plugin：
       <pre>/plugin marketplace add jasonw-dev/loopkb
 /plugin install loopkb@loopkb</pre>
       <b>Codex CLI</b> — 複製 vault 內 <code>integrations/codex/skills/</code> 的四個
       skill 到 <code>~/.agents/skills/</code>。<br>
-      <b>其他 agent</b> — 走 GETTING-STARTED 的手動路徑(AGENTS.md 為入口)。</div></div></div>
+      <b>其他 agent</b> — 走 GETTING-STARTED 的手動路徑（AGENTS.md 為入口）。</div></div></div>
     <div class="step-row"><div><b>加入 vault（每人每台機器一次）</b>
-      <div class="d">對 Claude Code 說一句,把網址換成步驟 1 產生的 repo 網址:
+      <div class="d">對 Claude Code 說一句，把網址換成步驟 1 產生的 repo 網址：
       <pre>kb-setup https://gitlab.example.com/team/team-kb.git</pre>
       它會自動 clone、驗證、設定好這台機器。</div></div></div>
-    <div class="step-row"><div><b>（選配）更多 vault、接線專案 repo</b>
-      <div class="d">同一台機器可以同時用多個 vault（公司知識庫 + 個人第二大腦）:
-      plugin 只裝一次,每個 vault 各說一次 kb-setup 即可,互不干擾
+    <div class="step-row"><div><b>（選配）同一台機器用多個 vault</b>
+      <div class="d">同一台機器可以同時用多個 vault（公司知識庫 + 個人第二大腦）：
+      入口只裝一次，每個 vault 各說一次 kb-setup 即可，互不干擾
       （vault 的 repo 名要彼此不同）。</div></div></div>
     <div class="step-row"><div><b>（選配）接線專案 repo</b>
       <div class="d">在專案的 CLAUDE.md 加一小段，之後該專案的 agent 遇到問題會先查知識庫。
@@ -238,7 +239,8 @@ footer a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-o
   <p class="sub">全部是 Markdown。Obsidian 打開就能讀，git 就是同步與履歷。</p>
   <pre class="tree">vault/
 ├── <b>_inbox/</b>            <span class="c">← 丟就對了，loop 會分類</span>
-├── <b>scripts/</b>           <span class="c">← lint.py（schema 檢查）、lease.py（併發鎖）</span>
+├── <b>scripts/</b>           <span class="c">← lint.py（schema 檢查）、lease.py（併發鎖）、</span>
+│                        <span class="c">verify_digest.py（digest 有沒有漏報高風險動作）</span>
 ├── <b>_meta/</b>             <span class="c">← 規則（taxonomy、loop）、instance 設定、digest</span>
 ├── troubleshooting/   <span class="c">← 症狀 → 原因 → 解法</span>
 ├── decisions/         <span class="c">← 技術決策記錄</span>
