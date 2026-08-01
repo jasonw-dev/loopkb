@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>loopkb — 迴圈驅動的知識庫</title>
+<style>
+:root{
+  --bg:#FAFAF7; --card:#FFFFFF; --ink:#1E2521; --muted:#5C6660;
+  --line:#DCE2DD; --accent:#2F7D5B; --accent-soft:#E4F0E9;
+  --raw:#B98A2F; --raw-soft:#F5ECD9; --cur:#3A7CA5; --cur-soft:#E2EEF5;
+  --ever:#2F7D5B; --ever-soft:#E4F0E9; --code:#F0F3F0; --danger:#A5533A;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#101613; --card:#171E1A; --ink:#E6EBE7; --muted:#93A099;
+  --line:#26302A; --accent:#58B78C; --accent-soft:#1D2E26;
+  --raw:#D4A94C; --raw-soft:#2E2718; --cur:#6FAFD6; --cur-soft:#182731;
+  --ever:#58B78C; --ever-soft:#1D2E26; --code:#1C2420; --danger:#D08265;
+}}
+:root[data-theme="dark"]{
+  --bg:#101613; --card:#171E1A; --ink:#E6EBE7; --muted:#93A099;
+  --line:#26302A; --accent:#58B78C; --accent-soft:#1D2E26;
+  --raw:#D4A94C; --raw-soft:#2E2718; --cur:#6FAFD6; --cur-soft:#182731;
+  --ever:#58B78C; --ever-soft:#1D2E26; --code:#1C2420; --danger:#D08265;
+}
+:root[data-theme="light"]{
+  --bg:#FAFAF7; --card:#FFFFFF; --ink:#1E2521; --muted:#5C6660;
+  --line:#DCE2DD; --accent:#2F7D5B; --accent-soft:#E4F0E9;
+  --raw:#B98A2F; --raw-soft:#F5ECD9; --cur:#3A7CA5; --cur-soft:#E2EEF5;
+  --ever:#2F7D5B; --ever-soft:#E4F0E9; --code:#F0F3F0; --danger:#A5533A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.75 -apple-system,"SF Pro TC","PingFang TC","Noto Sans TC",sans-serif;}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;}
+main{max-width:860px;margin:0 auto;padding:56px 24px 96px;}
+section{margin-top:72px;}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.2;margin:8px 0 12px;letter-spacing:-.01em;text-wrap:balance;}
+h2{font-size:22px;margin:0 0 6px;text-wrap:balance;}
+.eyebrow{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;letter-spacing:.14em;
+  color:var(--accent);text-transform:uppercase;}
+.lede{color:var(--muted);max-width:34em;margin:0;}
+.sub{color:var(--muted);font-size:14px;max-width:40em;margin:4px 0 24px;}
+.hero{padding-top:8px;}
+.hero .loopword{color:var(--accent);}
+.pill{display:inline-block;font-family:ui-monospace,monospace;font-size:12px;
+  border:1px solid var(--line);border-radius:999px;padding:2px 12px;color:var(--muted);}
+/* flow diagram */
+.flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:20px 4px 8px;}
+.stage{flex:1;min-width:118px;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:14px 14px 12px;position:relative;}
+.stage + .stage{margin-left:26px;}
+.stage + .stage::before{content:"→";position:absolute;left:-22px;top:50%;
+  transform:translateY(-50%);color:var(--muted);font-size:15px;}
+.stage .n{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);letter-spacing:.1em;}
+.stage b{display:block;font-size:15px;margin:2px 0 4px;}
+.stage p{margin:0;font-size:12.5px;line-height:1.55;color:var(--muted);}
+.loopback{display:flex;align-items:center;gap:10px;margin:6px 8px 0;color:var(--muted);font-size:12.5px;}
+.loopback .arr{flex:1;border-bottom:1.5px dashed var(--line);position:relative;height:1px;}
+.loopback .arr::before{content:"◀";position:absolute;left:-2px;top:-9px;color:var(--muted);font-size:10px;}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;}
+.card .k{font-family:ui-monospace,monospace;font-size:12.5px;color:var(--accent);}
+.card h3{margin:6px 0 6px;font-size:16px;}
+.card p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.65;}
+/* ladder */
+.ladder{display:flex;gap:14px;align-items:flex-end;overflow-x:auto;padding-top:8px;}
+.rung{flex:1;min-width:160px;border-radius:10px;padding:14px 16px;border:1px solid var(--line);}
+.rung .tag{font-family:ui-monospace,monospace;font-size:12px;font-weight:600;}
+.rung p{margin:6px 0 0;font-size:12.5px;line-height:1.6;color:var(--muted);}
+.rung.r1{background:var(--raw-soft);height:104px;}  .rung.r1 .tag{color:var(--raw);}
+.rung.r2{background:var(--cur-soft);height:140px;}  .rung.r2 .tag{color:var(--cur);}
+.rung.r3{background:var(--ever-soft);height:176px;} .rung.r3 .tag{color:var(--ever);}
+.rung .who{display:inline-block;margin-top:8px;font-size:11.5px;border:1px solid var(--line);
+  border-radius:999px;padding:1px 10px;background:var(--card);}
+/* learn cycle */
+.cycle{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative;}
+.cycle .card{position:relative;}
+.cycle .step{position:absolute;top:-10px;left:14px;background:var(--accent);color:var(--bg);
+  font-family:ui-monospace,monospace;font-size:11px;border-radius:999px;padding:1px 9px;}
+@media (max-width:560px){.cycle{grid-template-columns:1fr;}}
+/* governance */
+.gov{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:560px){.gov{grid-template-columns:1fr;}}
+.gov .card.on{border-color:var(--accent);}
+.badge{float:right;font-size:11px;font-family:ui-monospace,monospace;color:var(--accent);
+  background:var(--accent-soft);border-radius:999px;padding:1px 10px;}
+/* steps + code */
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:12px;}
+.step-row{display:flex;gap:14px;align-items:flex-start;background:var(--card);
+  border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+.step-row::before{counter-increment:s;content:counter(s);font-family:ui-monospace,monospace;
+  color:var(--accent);border:1px solid var(--accent);border-radius:999px;min-width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;margin-top:2px;}
+.step-row b{font-size:14.5px;}
+.step-row .d{font-size:13px;color:var(--muted);line-height:1.6;}
+code,pre{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;}
+code{background:var(--code);border-radius:5px;padding:1.5px 7px;}
+pre{background:var(--code);border-radius:8px;padding:12px 16px;overflow-x:auto;
+  line-height:1.7;margin:8px 0 0;}
+pre .c{color:var(--muted);}
+.tree b{color:var(--accent);font-weight:600;}
+footer{margin-top:88px;padding-top:20px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13px;display:flex;gap:16px;flex-wrap:wrap;}
+footer a{color:var(--accent);text-decoration:none;}
+footer a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media (prefers-reduced-motion: no-preference){
+  .stage,.card,.rung{transition:transform .15s ease;}
+  .stage:hover,.card:hover{transform:translateY(-2px);}
+}
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <span class="eyebrow">loopkb</span>
+  <h1>知識庫不是倉庫，<br>是一個<span class="loopword">會自我維護的迴圈</span></h1>
+  <p class="lede">純 Markdown 的 Obsidian vault + git + AI agent。
+  人只負責丟進去，分類、整理、連結、除舊——agent 的迴圈每週做。</p>
+  <p style="margin-top:14px"><span class="pill">Obsidian 相容</span>
+  <span class="pill">git 原生</span> <span class="pill">規則會學習</span>
+  <span class="pill">Claude Code / Codex / 任何 agent</span></p>
+</header>
+
+<section>
+  <span class="eyebrow">Your part</span>
+  <h2>人只做三件事</h2>
+  <p class="sub">貢獻的成本被刻意壓到最低——格式、分類、歸檔都不是你的工作。</p>
+  <div class="cards">
+    <div class="card"><span class="k">① _inbox/</span>
+      <h3>隨手丟</h3><p>任何筆記、連結、逐字稿丟進 <code>_inbox/</code>，commit + push。格式不拘。</p></div>
+    <div class="card"><span class="k">② kb-save</span>
+      <h3>順口存</h3><p>剛跟 AI 解完問題？在對話裡說一句「kb-save」，agent 萃取、分類、存檔。</p></div>
+    <div class="card"><span class="k">③ kb-loop</span>
+      <h3>每週跑一圈</h3><p>跑一次 loop，然後讀 <code>_meta/digest.md</code>（兩分鐘）。不同意的動作 <code>git revert</code> 即可。</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The loop</span>
+  <h2>Agent 每一圈做什麼</h2>
+  <p class="sub">無狀態設計：任何人、任何機器、任何時間都能跑；中斷了下一圈自然接手。</p>
+  <div class="flow">
+    <div class="stage"><span class="n">00 LEASE</span><b>上鎖</b><p>同時只有一圈在跑</p></div>
+    <div class="stage"><span class="n">01 TRIAGE</span><b>歸檔</b><p>清空 inbox：判型態、套模板、入資料夾</p></div>
+    <div class="stage"><span class="n">02 REFINE</span><b>精煉</b><p>補連結、合併重複、複查最舊筆記</p></div>
+    <div class="stage"><span class="n">03 REFLECT</span><b>反省</b><p>從人類修正中歸納，提議改規則</p></div>
+    <div class="stage"><span class="n">04 LINT</span><b>健檢</b><p><code>lint.py</code> 機械檢查，agent 修復</p></div>
+  </div>
+  <div class="loopback"><span class="arr"></span><span>寫完 digest → 下週再來一圈</span></div>
+</section>
+
+<section>
+  <span class="eyebrow">Trust ladder</span>
+  <h2>每篇筆記帶著信任等級</h2>
+  <p class="sub">讀的時候（人或 agent）優先信任高等級——因為 evergreen 是人背書的，不是 agent 自己蓋章。</p>
+  <div class="ladder">
+    <div class="rung r1"><span class="tag mono">raw</span><p>剛歸檔</p>
+      <span class="who">歸檔即得</span></div>
+    <div class="rung r2"><span class="tag mono">curated</span><p>連結、tag、格式齊備</p>
+      <span class="who">agent 或人晉升（過機械門檻）</span></div>
+    <div class="rung r3"><span class="tag mono">evergreen</span><p>蒸餾過，可長期信賴</p>
+      <span class="who">只有人能晉升</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Loop engineering</span>
+  <h2>規則會學習：你的修正就是訓練訊號</h2>
+  <p class="sub">不用寫報告、不用開會檢討——直接改，系統自己學。</p>
+  <div class="cycle">
+    <div class="card"><span class="step">1</span><h3>Agent 分類</h3>
+      <p>依 <code>_meta/</code> 的規則歸檔，commit 帶 <code>[kb-loop]</code> 記號。</p></div>
+    <div class="card"><span class="step">2</span><h3>人直接修正</h3>
+      <p>分錯就搬走、不同意就 revert——普通 commit，不需要任何特殊格式。</p></div>
+    <div class="card"><span class="step">3</span><h3>Reflect 歸納</h3>
+      <p>下一圈從 git 歷史認出「人推翻了 agent」，同類修正 ≥ 2 次就成為 pattern。</p></div>
+    <div class="card"><span class="step">4</span><h3>規則更新</h3>
+      <p>更新分類規則——autonomous 模式直接生效並列入 digest,reviewed 模式開 MR 等你批。
+      之後同樣的錯不再犯,分類越用越準。</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Governance</span>
+  <h2>兩種治理模式</h2>
+  <p class="sub">在 <code>_meta/instance.md</code> 一行切換。安全底線相同：git 歷史讓一切可回溯。</p>
+  <div class="gov">
+    <div class="card on"><span class="badge">預設</span><span class="k">autonomous</span>
+      <h3>事後可撤</h3>
+      <p>agent 一切直接 commit，風險動作逐條列進 digest。
+      人每週讀兩分鐘，不同意就 revert。<b>人不在關鍵路徑上。</b></p></div>
+    <div class="card"><span class="k">reviewed</span>
+      <h3>事前審批</h3>
+      <p>破壞性動作與規則變更先開 merge request，人批准才落地。
+      給還沒建立信任的團隊。</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Get started</span>
+  <h2>怎麼開始用</h2>
+  <p class="sub">兩種角色:<b>建立者</b>做步驟 1（每團隊一次）;<b>成員</b>做步驟 2–3（每人每台機器一次）。
+  全程不需要自己 git clone——plugin 由 Claude Code 自動抓取,vault 由 kb-setup 代勞。</p>
+  <div class="steps">
+    <div class="step-row"><div><b>建立 vault（每個團隊一次）</b>
+      <div class="d">從 <a href="https://github.com/jasonw-dev/loopkb">loopkb template</a> 按
+      「Use this template」開一個新 repo，然後照 repo 裡 GETTING-STARTED 的 checklist
+      填好 <code>_meta/instance.md</code>（語言、知識範圍、tag 字彙、治理模式）。
+      做完把 repo 網址發給團隊，並給每個人 repo 的 write access
+      （autonomous 模式下,大家都要能直接 push）。</div></div></div>
+    <div class="step-row"><div><b>裝入口（每人一次，全域生效，依你用的 agent 擇一）</b>
+      <div class="d"><b>Claude Code</b> — 裝 plugin:
+      <pre>/plugin marketplace add jasonw-dev/loopkb
+/plugin install loopkb@loopkb</pre>
+      <b>Codex CLI</b> — 複製 vault 內 <code>integrations/codex/skills/</code> 的四個
+      skill 到 <code>~/.agents/skills/</code>。<br>
+      <b>其他 agent</b> — 走 GETTING-STARTED 的手動路徑(AGENTS.md 為入口)。</div></div></div>
+    <div class="step-row"><div><b>加入 vault（每人每台機器一次）</b>
+      <div class="d">對 Claude Code 說一句,把網址換成步驟 1 產生的 repo 網址:
+      <pre>kb-setup https://gitlab.example.com/team/team-kb.git</pre>
+      它會自動 clone、驗證、設定好這台機器。</div></div></div>
+    <div class="step-row"><div><b>（選配）更多 vault、接線專案 repo</b>
+      <div class="d">同一台機器可以同時用多個 vault（公司知識庫 + 個人第二大腦）:
+      plugin 只裝一次,每個 vault 各說一次 kb-setup 即可,互不干擾
+      （vault 的 repo 名要彼此不同）。</div></div></div>
+    <div class="step-row"><div><b>（選配）接線專案 repo</b>
+      <div class="d">在專案的 CLAUDE.md 加一小段，之後該專案的 agent 遇到問題會先查知識庫。
+      範本在 vault 的 <code>kb-search</code> skill 裡。</div></div></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Anatomy</span>
+  <h2>Vault 長什麼樣</h2>
+  <p class="sub">全部是 Markdown。Obsidian 打開就能讀，git 就是同步與履歷。</p>
+  <pre class="tree">vault/
+├── <b>_inbox/</b>            <span class="c">← 丟就對了，loop 會分類</span>
+├── <b>scripts/</b>           <span class="c">← lint.py（schema 檢查）、lease.py（併發鎖）</span>
+├── <b>_meta/</b>             <span class="c">← 規則（taxonomy、loop）、instance 設定、digest</span>
+├── troubleshooting/   <span class="c">← 症狀 → 原因 → 解法</span>
+├── decisions/         <span class="c">← 技術決策記錄</span>
+├── guides/            <span class="c">← how-to</span>
+├── references/        <span class="c">← 外部資料摘要</span>
+└── meetings/          <span class="c">← 會議記錄</span></pre>
+  <p class="sub" style="margin-top:14px">型態用資料夾（穩定不變），領域用 tag（封閉字彙——由
+  instance 宣告、靠修正迴圈演化，不能隨手發明）——一篇筆記一個家，跨領域靠 tag 與
+  <code>[[wikilink]]</code>。</p>
+</section>
+
+<footer>
+  <span>loopkb — loop-driven knowledge base framework</span>
+  <a href="https://github.com/jasonw-dev/loopkb">github.com/jasonw-dev/loopkb</a>
+</footer>
+</main>
+</body>
+</html>

@@ -3,7 +3,7 @@
 **A loop-driven knowledge base framework for AI agents.** Obsidian-compatible,
 git-native, and continuously self-improving.
 
-**[▶ Visual intro（視覺化導覽）](https://claude.ai/code/artifact/9052bb5e-eb3b-4d83-84d1-96aa9276dfcf)** — a 3-minute illustrated tour of how the loop works.
+**[▶ Visual intro（視覺化導覽）](https://jasonw-dev.github.io/loopkb/explainer.html)** — a 3-minute illustrated tour of how the loop works.
 
 *(中文導讀在文末)*
 
@@ -162,6 +162,10 @@ python3 -m unittest discover -s tests      # the framework's own suite
 The suite is stdlib `unittest` with no fixtures on disk: it builds throwaway vaults and
 real git repos in temp directories to cover every linter rule, the lease's
 compare-and-swap against a bare remote with two clones, and the digest verifier.
+
+A change to user-visible behavior must also update `docs/explainer.html` (the visual
+intro, served from GitHub Pages) — it lives in the repo precisely so it cannot drift
+out of sync unnoticed.
 
 ## License
 
