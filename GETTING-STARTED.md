@@ -152,7 +152,11 @@ Work through this checklist — the instance is ready when every box is checked:
       `reviewed` mode depend on it. If your platform enforces branch protection, you
       cannot run `autonomous`: use `reviewed`, and route ALL writes through MRs via an
       instance policy override.
-- [ ] Rewrite the README for your instance (the template README describes the framework).
+- [ ] Rewrite the README for your instance (the template README describes the framework):
+      copy `_meta/README.instance.md` over `README.md` and fill in the blanks. **Keep the
+      join block** — the two plugin-install commands plus `kb-setup <your vault URL>` — or
+      at minimum link to GETTING-STARTED.md → "Joining a vault". Once the framework README
+      is gone, that block is the only place a new teammate finds the way in.
 - [ ] Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
 - [ ] Open the vault in Obsidian once to confirm it reads well.
 - [ ] Tell your teammates how to join: install the plugin, then
@@ -178,10 +182,18 @@ needs hands is when the **skeleton itself** changed upstream (a new section, a r
 one): git will report a conflict in `_meta/instance.md` — keep your values, adopt the
 new structure around them, and commit the merge.
 
+One file changes hands: **`README.md` becomes instance-owned** the moment you rewrite it
+(checklist above). Upstream keeps editing the template README, so that file — and only
+that file — will conflict on every merge that touches it. Keep yours:
+
+```bash
+git checkout --ours README.md && git add README.md
+```
+
 Everything else (CLAUDE.md, `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`,
-`.claude/skills/`, `scripts/`) is framework-owned. If you edited one of those files
-locally, the merge will conflict there — that is the signal to move the customization
-into `_meta/instance.md` as a policy override instead.
+`.claude/skills/`, `scripts/`) is framework-owned and stays conflict-free as promised.
+If you edited one of those files locally, the merge will conflict there — that is the
+signal to move the customization into `_meta/instance.md` as a policy override instead.
 
 ---
 
