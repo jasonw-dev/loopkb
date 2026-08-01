@@ -43,6 +43,9 @@ loopkb@loopkb` exposes `/loopkb:kb-save`, `/loopkb:kb-search`, `/loopkb:kb-loop`
 anywhere. There is exactly one copy of each SKILL.md, so drift between the vault and
 the plugin is structurally impossible and no generation step exists to forget to run.
 
+*Extended by D9.* The plugin gained a fourth skill, `kb-setup`, which turns the plugin
+from "the skills work anywhere" into "installing the plugin is the whole onboarding".
+
 ## D3 — The linter is the schema
 
 **Context.** The lint stage was a prose checklist, so "is this note valid?" depended on
@@ -183,3 +186,22 @@ not a formatting slip. It also demands that every risky action be one self-conta
 revertable commit (a merge deletes originals and retargets links in the same commit),
 and it makes `autonomous` unusable where branch protection forbids direct pushes to
 `main`, which is exactly when an instance should pick `reviewed`.
+
+## D9 — Onboarding is a skill, not a checklist
+
+**Context.** Joining a vault took four manual steps — clone it, hand-write
+`~/.claude/<vault-name>.md`, verify the clone, wire a project repo — spread across the
+README and kb-search's SKILL.md. Every step is a drop-off point, and the framework's
+value only starts after the last one.
+
+**Decision.** Ship a fourth skill, `kb-setup`, through the same plugin manifest: it takes
+a vault URL, confirms a destination with the user before cloning, refuses anything
+without `_meta/loop.md`, runs the linter, writes the per-user `KB_VAULT` file, reports
+whether the vault has passed its setup gate, and ends by naming the three daily actions.
+
+**Consequence.** With the plugin installed, onboarding is one sentence, and the steps
+that used to be prose a human might skip are now steps an agent cannot. The manual four
+remain documented as a collapsed fallback for non-Claude-Code users, so the
+`~/.claude/<vault-name>.md` contract still has exactly one definition. The cost is that
+the plugin now touches the user's home directory, which is why the destination path and
+any conflicting existing file are always shown before being written.
