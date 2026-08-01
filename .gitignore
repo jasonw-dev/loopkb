@@ -4,3 +4,7 @@
 
 # OS
 .DS_Store
+
+# Python (scripts/ is stdlib-only, but running them leaves bytecode)
+__pycache__/
+*.pyc
