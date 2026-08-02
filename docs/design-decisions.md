@@ -403,3 +403,32 @@ are removable by hand, and a human's revert of one is itself the rejection signa
 stops it coming back. And re-deriving the rejection set costs a full-history `git log`
 every run — cheap now, linear in history forever, and the price of not trusting a document
 to be a database.
+
+## D13 — Contradictions are found by consumers, not by a sweep
+
+**Context.** The loop self-corrects only the contradictions it happens to *see*: refine's
+merge candidates, the freshness check, a human correction. Nothing looks for two notes
+that quietly disagree, and the read path made that worse — kb-search ranks hits by trust
+order, so an agent could pick a side and answer as though there were no conflict, leaving
+the losing note in the vault for the next reader to believe.
+
+**Decision.** Make every consumer a detector and let refine reconcile on sight. kb-search,
+on retrieving contradictory notes, still answers by the trust order but must *say* so —
+which notes, which claims, which one it followed and why — and must record the conflict
+back to `_inbox/` as a report naming both notes in `[[wikilinks]]`, committed and pushed
+under kb-save's git rules. Triage routes that report without filing it as a note (it
+carries no new fact), and refine (Stage 2b) resolves conflicts the moment its link search
+or such a report reveals one: merge or correct through the normal channels; when it cannot
+tell which side is right, demote the doubtful note one level with the reason and list the
+conflict under the digest's Stuck section. A dedicated consistency-sweep stage was
+rejected — a fifth stage comparing note against note is quadratic in vault size to find
+what reading surfaces for free.
+
+**Consequence.** Detection now scales with how much the vault is *read* rather than how
+big it grows, and the notes that get checked are the ones people actually use. A
+contradiction between two unread notes stays undetected, which is accepted: it misleads
+nobody until someone reads it, and reading it is what triggers the check. The prices are
+that the read path gained a write side effect — one inbox item and one commit per
+contradiction found, inheriting kb-save's failure modes when the remote is unreachable —
+and that refine now spends budget on conflicts it did not schedule, which is the intended
+priority: a wrong note outranks an unlinked one.
