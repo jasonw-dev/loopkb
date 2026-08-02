@@ -28,8 +28,30 @@ If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (sk
    The order is not decoration: `curated` means an agent met a mechanical floor, while
    `evergreen` means a human stood behind the note and conferred that status by hand.
 4. Follow `[[wikilinks]]` from hits — related notes often hold the missing half of the answer.
-5. Apply the found solution, citing the note (`filename`) so the user knows the source.
-6. **Miss with pain**: if nothing was found and solving it took real effort, offer to
+5. **Contradictions between notes**: when two retrieved notes make conflicting claims about
+   the same thing, never silently pick a side. Both halves below are required.
+   - **Tell the user.** Answer using the trust order from step 3 (`evergreen` > `curated` >
+     `raw`, newer `created` on ties), and say in the answer that the notes disagree: name
+     both (`filename`), state the conflicting claims, and say which one you followed and
+     why the order picked it. The user decides whether the preferred note is the right one;
+     they can only do that if they know a choice was made.
+   - **Record it back to the vault.** Write a short item to `<vault>/_inbox/` (e.g.
+     `contradiction-<slug>.md`) opening with a line that says it is a contradiction report,
+     naming both notes as `[[wikilinks]]`, quoting the conflicting claims, and stating which
+     one you preferred. Commit and push it with the kb-save git rules:
+     ```
+     git pull --rebase --autostash
+     git add <file> && git commit -m "[kb-save] contradiction: <topic>"
+     git push
+     ```
+     The prefix is `[kb-save]` — this is knowledge captured from a conversation, and the
+     write is additive. No `origin` remote → just commit. Rebase conflict or push failure →
+     commit locally and tell the user sync is pending.
+   - **Do not fix either note here.** kb-search never edits existing notes, exactly as
+     kb-save never does. The loop's triage files the report and refine resolves the
+     conflict (`_meta/loop.md` → Stage 2b).
+6. Apply the found solution, citing the note (`filename`) so the user knows the source.
+7. **Miss with pain**: if nothing was found and solving it took real effort, offer to
    `/kb-save` the new solution — that is how the base grows.
 
 ## Wiring a project repo (one-time)

@@ -64,7 +64,12 @@ For each item in `_inbox/`:
    key or personal data stays in `_inbox/` with the rotation callout — see
    `_meta/taxonomy.md` → "What does NOT belong", which also explains why rotation, not
    deletion, is the remedy.
-7. **Skip items already annotated**: if an item already carries a kb-loop callout and
+7. **Contradiction reports are routed, not filed**: an item that reports two notes making
+   conflicting claims (kb-search writes them, `[kb-save] contradiction: …`) is a work item,
+   not knowledge — it names no new fact, so it gets no type folder. Leave it in `_inbox/`
+   and hand it to Stage 2b of the same run, which resolves the conflict and deletes the item
+   in the resolving commit, or leaves it for the human with a callout and a Stuck line.
+8. **Skip items already annotated**: if an item already carries a kb-loop callout and
    has had no human modification since the last run (`git log` on the file shows no
    unprefixed commit after the annotating one, and it has no uncommitted changes),
    leave it untouched and list it in the digest instead of re-annotating.
@@ -105,6 +110,19 @@ Pick notes: all `raw` before any `curated`; within a status, oldest frontmatter
   alone is not the whole state there, the platform holds open proposals. In
   `autonomous` mode there is nothing pending by construction: work either landed on
   `main` or was reverted.
+- **Reconcile contradictions on sight.** The tag/keyword search above (and any
+  contradiction report triage filed out of `_inbox/` — kb-search writes them) will surface
+  notes that make *conflicting* claims, not just related ones. Resolve them in this run
+  rather than deferring: merge the pair, or correct the wrong note, through the normal
+  channels for those actions (risky → itemized in the digest as usual). This is the only
+  systematic contradiction detection the framework has, so a conflict seen and postponed is
+  a conflict nobody looks for again.
+  When you cannot tell which side is right — both notes cite plausible sources, neither is
+  reproducible from here — do not guess: **demote the doubtful note one level** with the
+  reason in the commit message (name the other note), and list the conflict under the
+  digest's **Stuck** section with both notes, the conflicting claims, and what would decide
+  it. A contradiction report from `_inbox/` is consumed the same way: resolved here, or
+  moved to Stuck. It counts against the refine budget like any other note worked on.
 - If two or more notes overlap heavily: merge them. One commit (or one MR in
   `reviewed` mode) deletes the originals — their full text stays reviewable in the
   deleted-file diff — and retargets every inbound wikilink; no follow-up commits.
@@ -304,7 +322,9 @@ Sections, in this order:
    and the rejection memory (reverted SHAs / closed MRs) as it stands. That listing is
    for the human to read, not for the next run to consume: the next run re-derives it.
 6. **Lint** — the exit status and anything left unfixed.
-7. **Stuck** — inbox items that need human context, and what context each needs.
+7. **Stuck** — inbox items that need human context, and what context each needs; plus
+   contradictions refine could not resolve (both notes, the conflicting claims, which one
+   was demoted, and what would decide it).
 8. **Nominations** — `nominate <note> for evergreen: <reason>`, one per line.
    Un-acted nominations lapse; the next run may re-nominate.
 
