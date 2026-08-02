@@ -163,6 +163,15 @@ re-reads the oldest notes and demotes what no longer holds.
    non-empty — the `_meta/` write rule for agents is active: MR-only in `reviewed`
    mode; direct commit plus a digest "Risky actions" line in `autonomous` mode.
    Before that gate, instantiation edits are allowed directly and unreported.
+6. **Rewriting an existing note means re-reading its link neighborhood first.** Before
+   committing a rewrite, read the note's outbound wikilinks and find its inbound ones
+   mechanically — `grep -rl "\[\[<basename>\]\]"` over the type folders, `<basename>`
+   being the filename without `.md` — then apply Stage 2b's reconcile-on-sight duty
+   (`_meta/loop.md`) to whatever they say: reconcile through the normal channels for
+   those actions, and where you cannot tell which side is right, demote the doubtful
+   note one level with the reason and add a digest **Stuck** line naming both notes.
+   Risky actions stay itemized as usual. The neighborhood is the link graph and nothing
+   more — never the whole vault. This binds every agent rewrite, inside a loop run or not.
 
 These hold in both governance modes. `autonomous` moves the human review *after* the
 write; it does not remove the lease, the linter, the push rules, or the prefixes.

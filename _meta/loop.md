@@ -123,6 +123,10 @@ Pick notes: all `raw` before any `curated`; within a status, oldest frontmatter
   digest's **Stuck** section with both notes, the conflicting claims, and what would decide
   it. A contradiction report from `_inbox/` is consumed the same way: resolved here, or
   moved to Stuck. It counts against the refine budget like any other note worked on.
+  The same duty attaches to **any** rewrite of an existing note, in this stage or outside
+  a loop run entirely: re-read the note's wikilink neighborhood — outbound links plus
+  inbound ones found with `grep -rl "\[\[<basename>\]\]"` — and reconcile what it
+  surfaces (`CLAUDE.md` → Guardrails 6, which states the rule for all agents).
 - If two or more notes overlap heavily: merge them. One commit (or one MR in
   `reviewed` mode) deletes the originals — their full text stays reviewable in the
   deleted-file diff — and retargets every inbound wikilink; no follow-up commits.

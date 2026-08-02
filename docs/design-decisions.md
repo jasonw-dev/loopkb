@@ -432,3 +432,46 @@ that the read path gained a write side effect — one inbox item and one commit 
 contradiction found, inheriting kb-save's failure modes when the remote is unreachable —
 and that refine now spends budget on conflicts it did not schedule, which is the intended
 priority: a wrong note outranks an unlinked one.
+
+*Extended by D14.* The two detection points named here — read time and refine time — are
+joined by a third, write time: an agent rewriting a note reconciles that note's wikilink
+neighborhood before committing, which catches the contradictions a rewrite itself creates
+instead of waiting for a later reader to trip over them. The quadratic sweep stays
+rejected; a neighborhood is the link graph, not the vault.
+
+## D14 — A rewrite re-reads its own neighborhood
+
+**Context.** D13 gave contradiction detection two moments: read time, where kb-search
+names the conflict it retrieved and files a report, and refine time, where Stage 2b
+reconciles what its link search surfaces. A real case showed the third one missing. Two
+rule-bearing notes — a spec and a card that wikilinked it — were left flatly contradicting
+each other because an agent rewrote one of them without re-reading the other. Neither D13
+detector was due to fire: nobody was searching those notes, and refine had scheduled
+neither, so a contradiction *created* by a write would have sat latent until an execution
+under time pressure hit it and had to guess which note to believe. The moment a note's
+meaning changes is also the cheapest moment to check it against its neighbors, and the
+only one where the agent already knows exactly what changed.
+
+**Decision.** Any agent rewriting an existing note first re-reads that note's wikilink
+neighborhood — the outbound links in the note itself, plus the inbound ones found
+mechanically with `grep -rl "\[\[<basename>\]\]"` over the type folders — and applies
+Stage 2b's reconcile-on-sight duty to what it finds: reconcile through the normal channels
+for those actions; where it cannot tell which side is right, demote the doubtful note one
+level with the reason and list the conflict under the digest's Stuck section; risky actions
+itemized as usual. It lands as a numbered guardrail in `CLAUDE.md` rather than as a loop
+stage, because it binds every rewrite an agent performs, inside a loop run or not, and
+Stage 2b cross-references the guardrail so loop-time and ad-hoc rewrites obey one rule.
+The neighborhood is the link graph and nothing beyond it — comparing a rewritten note
+against every other note is D13's rejected quadratic sweep wearing a different hat.
+
+**Consequence.** Contradiction detection now covers all three moments a note can take part
+in one — read, refine, write — and the new one is the only check that runs *before* the
+contradiction exists, so the failure that motivated it is caught by the very agent that
+would otherwise have caused it. The prices are two. A rewrite costs one grep plus reading
+the neighbors it returns, which is negligible for a leaf note and genuinely heavy for a
+hub with many inbound links — bounded by the graph rather than the vault, but not small,
+and it competes with the same refine budget as everything else. And the check sees only
+what is linked: a note contradicting an unlinked stranger passes write time unnoticed,
+which is the same limit D13 already accepted and leaves to read time to find. That is also
+a standing argument for adding wikilinks eagerly in refine — links are now what makes
+contradictions findable, not just what makes notes navigable.
