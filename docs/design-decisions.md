@@ -86,6 +86,18 @@ marketplace's `name`), with `skills` still pointing at `.claude/skills/`. The du
 content by construction, and plugin namespacing keeps the two from colliding — the same
 "both sets are live at once" property the README already relies on inside a vault.
 
+*Qualified by practice (2026-08-03): the copies are one layer of three.* This decision
+says how an instance's *skills* travel, and nothing said what travels with them — so a
+wired repo received the framework's knowledge block alone, and its agents, having no
+pointer to the instance's workflow documents and no copies of its skills, improvised
+both. Wiring is therefore documented as three layers landing in one commit per repo: the
+knowledge-layer block, a pointer naming the instance's own rule documents by path under
+`<KB_VAULT>/`, and the skill copies plus whatever platform scaffolding the instance
+defines (`.claude/skills/kb-search/SKILL.md` → "What wiring carries when the instance has
+its own workflow"). The sync duty copies imply — edit the vault canonical, re-sync every
+wired repo in the same piece of work — is part of the price accepted here; the revisit
+trigger above is unchanged.
+
 ## D3 — The linter is the schema
 
 **Context.** The lint stage was a prose checklist, so "is this note valid?" depended on

@@ -98,3 +98,32 @@ pointer to CLAUDE.md) in its AGENTS.md — those agents do not read CLAUDE.md by
 `@~/.claude/<vault-name>.md` is **Claude Code import syntax**, not a general convention:
 a non-Claude agent must open `~/.claude/<vault-name>.md` itself and read the `KB_VAULT:`
 line out of it. Say that explicitly in the AGENTS.md copy.
+
+### What wiring carries when the instance has its own workflow
+
+Everything above is the framework's part — the knowledge layer, identical in every
+instance. An instance that has grown its own rules and skills must ALSO put these into
+each repo it wires; an agent there knows only what that repo's own files tell it.
+
+1. **A pointer to the instance's workflow/spec documents.** One or two sentences in the
+   same committed CLAUDE.md (and its AGENTS.md variant) telling agents to read those
+   vault documents *before* acting in the domain they govern — e.g. before creating or
+   editing an issue or MR, when the instance defines an issue workflow. **Name each
+   document by its path** under `<KB_VAULT>/`: agents do not go looking for rules nobody
+   told them exist, so "the vault has a workflow" is a pointer they cannot follow.
+2. **Copies of the instance's own skills.** The thin-pointer `SKILL.md` files under the
+   repo's `.claude/skills/<name>/`, byte-identical to the vault canonicals apart from a
+   header comment saying this is a copy and naming the canonical path. The vault keeps
+   the canonical: edit it there, then re-sync every wired repo in the same piece of
+   work — a drifted copy is worse than a missing one, since it still reads as
+   authoritative. Copies rather than a plugin because the users are enumerable (the
+   handful of repos the instance wires), which is the split `docs/design-decisions.md`
+   → D2 draws.
+3. **Platform-specific scaffolding the instance defines** — issue/MR templates in
+   whatever location the host platform reads them from, say. These are instance- and
+   platform-specific, so the framework says only this: if your instance defines them,
+   wiring carries them.
+
+All of it is one commit per repo, and the same list is the checklist for the NEXT repo
+the instance wires. The failure it prevents has already happened: a repo that received
+the knowledge block alone, whose agents then improvised the workflow the vault defined.

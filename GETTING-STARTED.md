@@ -349,7 +349,9 @@ Work through this checklist — the instance is ready when every box is checked:
       and stays open to you: an instance may ship its own team skills as thin pointers in
       `.claude/skills/<name>/SKILL.md` that point at the instance's own canonical guide in
       the vault — every clone gets them with nothing to install, and since upstream never
-      ships those names, a template merge leaves them alone.
+      ships those names, a template merge leaves them alone. Shipping one incurs a duty at
+      wiring time: each repo you wire gets a copy, kept in sync with the canonical (the
+      wiring bullet below).
 - [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
       `autonomous` (agent commits everything, you review `_meta/digest.md` and revert).
       Switch to `reviewed` if destructive actions should wait for your approval — see
@@ -388,7 +390,12 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] Run `kb-setup <your vault URL>` on your own machine too — creating the vault did
       not wire this machine. It is what writes the per-user `~/.claude/<vault-name>.md`
       that every wired project repo imports.
-- [ ] Wire your project repos: see "Wiring a project repo" in `.claude/skills/kb-search/SKILL.md`.
+- [ ] Wire your project repos: see "Wiring a project repo" in
+      `.claude/skills/kb-search/SKILL.md`. Read its last subsection too — once your
+      instance has workflow documents or team skills of its own, the same wiring commit
+      carries a pointer to those documents, copies of those skills, and whatever
+      platform scaffolding you define; a repo that gets the knowledge block alone has
+      agents that improvise the rest.
 - [ ] *Optional*: open the vault in Obsidian once to confirm it reads well. Obsidian is a
       human reading UI, nothing more — the vault is fully usable without it.
 - [ ] Grant your teammates write access to the repo — `autonomous` mode needs everyone
