@@ -255,11 +255,11 @@ class LintTest(TempDirTestCase):
         self.assertIn("1 warning(s)", out)
 
     def test_framework_directories_are_outside_the_note_namespace(self) -> None:
-        # integrations/ ships one SKILL.md per agent platform: four identical basenames
-        # that would collide in the index, and none of them is a note.
+        # None of these directories holds notes. integrations/ carries the per-agent
+        # explanation docs; the procedures live in .claude/skills/ with a pointer twin in
+        # .agents/skills/ — identical SKILL.md basenames that would collide in the index.
         for agent in ("codex", "other"):
             write(self.vault / "integrations" / agent / "kb-search" / "SKILL.md", "# pointer\n")
-        # .claude/skills/ and its .agents/skills/ twin are procedures, not notes, either.
         for skills_dir in (".claude", ".agents"):
             write(self.vault / skills_dir / "skills" / "kb-search" / "SKILL.md", "# pointer\n")
         write(self.vault / "docs" / "design-decisions.md", "# ADRs\n")

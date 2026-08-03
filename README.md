@@ -64,7 +64,9 @@ vault/
 ├── _meta/             ← instance config, taxonomy, loop spec, note templates
 ├── scripts/           ← lint.py (schema check) · lease.py (one loop run at a time)
 │                        verify_digest.py (the digest itemizes every risky action)
-├── integrations/      ← per-agent entry points (codex/) — thin pointers, no copies
+├── .claude/skills/    ← the four procedures (kb-setup/save/search/loop) — one definition
+├── .agents/skills/    ← Codex entry points — thin pointers to .claude/skills/, no copies
+├── integrations/      ← per-agent explanation docs (codex/) — mechanism and setup notes
 ├── troubleshooting/   ← symptom → cause → fix
 ├── decisions/         ← lightweight ADRs
 ├── guides/            ← how-to
