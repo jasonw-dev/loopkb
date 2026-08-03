@@ -321,6 +321,22 @@ Work through this checklist — the instance is ready when every box is checked:
   leaves your history unrelated to the template's, so the *first* update merge needs
   `--allow-unrelated-histories` and conflicts by design — "Updating an instance" walks
   through it.
+- [ ] `git rm -r .claude-plugin/` — that directory is the **framework's** publication
+      config: it declares the `loopkb` plugin and the marketplace owned by `jasonw-dev`,
+      so an instance that keeps it silently declares itself to be that plugin. Your
+      members still install the framework plugin from `jasonw-dev/loopkb` (the join
+      block in your README) — nothing about that needs a manifest inside your vault.
+      The rule behind the split: a skill needs plugin distribution when its users cannot
+      be enumerated (`kb-save`/`kb-search` run in any repo, or in none) or when it must
+      exist *before* the vault is cloned (`kb-setup` bootstraps). Your own team skills
+      have neither property — they serve the handful of project repos you wire anyway,
+      so per-repo copies are the cheaper answer. If that stops holding, make your own
+      manifest then: renaming is nearly the whole job (`name`, `displayName`, `author`,
+      `repository`, and the marketplace's `name`), `skills` can keep pointing at
+      `.claude/skills/`, and the duplicate `kb-*` that appears under your namespace is
+      harmless — byte-identical content, and plugin namespacing keeps the two apart.
+      Trigger to revisit: three or more wired repos, or people who need the team skills
+      in repos that carry no copies.
 - [ ] Fill `_meta/instance.md`: identity (note body language, vault scope), the domain
       tag vocabulary, and any policy overrides. Leave "Classification rule amendments"
       empty — that section is where the loop writes the rules it learns from your
@@ -471,6 +487,12 @@ that file — will conflict on every merge that touches it. Keep yours:
 git checkout --ours README.md && git add README.md
 ```
 
+One directory is *absent* rather than owned: `.claude-plugin/`, which the checklist had
+you delete. When upstream changes a manifest there, the merge reports a modify/delete
+conflict — keep your deletion (`git rm -r .claude-plugin/`), the same answer every time,
+unless you have since made a manifest of your own (checklist above), in which case yours
+is instance-owned and you keep it with `git checkout --ours`.
+
 Everything else (CLAUDE.md, `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`,
 the `kb-*` skills in `.claude/skills/`, `scripts/`) is framework-owned and stays
 conflict-free from the second merge onward. If you edited one of those files locally,
@@ -498,7 +520,7 @@ to correct.
 
 ## 中文導讀
 
-**兩種角色**：**建立者**（每個團隊一次：從 template 開新 repo、填 `_meta/instance.md`、給團隊成員權限、把 vault URL 發出去）與**成員**（每台機器一次：裝 plugin、跑 `kb-setup <vault URL>`）。建立者自己也是成員——建好 vault 不等於這台機器已經接好。
+**兩種角色**：**建立者**（每個團隊一次：從 template 開新 repo、刪掉框架的 `.claude-plugin/`（那是 `jasonw-dev/loopkb` 這個 plugin 的發佈設定，不是你的）、填 `_meta/instance.md`、給團隊成員權限、把 vault URL 發出去）與**成員**（每台機器一次：裝 plugin、跑 `kb-setup <vault URL>`）。建立者自己也是成員——建好 vault 不等於這台機器已經接好。
 
 **加入一個 vault**：兩條路徑，終點相同（一份 vault clone + `~/.claude/<vault-name>.md` 裡的 `KB_VAULT:` 一行）。**Claude Code**：你不用自己 `git clone`——裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫檔都由 agent 完成。**其他 agent**：上面英文段落有手動四步驟——這條路徑確實要你自己 clone。
 

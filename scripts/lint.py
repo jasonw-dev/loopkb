@@ -36,6 +36,11 @@ REQUIRED_KEYS = ("type", "domains", "created", "source", "status")
 # invisible — unlinted, missing from the basename index, and every wikilink into them
 # reported as dangling from the other side.
 #
+# `.claude-plugin` is the mirror case: the framework ships one and every instance deletes
+# it (GETTING-STARTED.md → "Starting a new instance"), so the skip has to survive an
+# absent directory for the same reason — and has to stay for the instance that later
+# publishes a plugin manifest of its own.
+#
 # `.agents` is here although the framework itself no longer ships one: an instance may
 # carry team skills of its own in `.agents/skills/<name>/SKILL.md`, and dropping the skip
 # would start linting those pointer files as notes — collided basenames against their

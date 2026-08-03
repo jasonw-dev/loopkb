@@ -67,6 +67,25 @@ packaging the framework ships, so this decision stands alone rather than as one 
 of a pattern — "one copy, no drift" is now a property of the manifest pointing at
 `.claude/skills/`, and nothing else points at those files.
 
+*Scoped (2026-08-03): this is the framework's publication config, not an instance's.*
+`.claude-plugin/` names the `loopkb` plugin and marketplace owned by `jasonw-dev`, so an
+instance that inherits it declares itself to be that plugin — instantiation therefore
+deletes it (`git rm -r .claude-plugin/`, GETTING-STARTED.md → "Starting a new instance"),
+and later merges resolve the modify/delete conflict by keeping the deletion. The rule that
+decides who needs a manifest: plugin distribution earns its cost when a skill's users
+cannot be enumerated — `kb-save`/`kb-search` run in any repo or in none — or when the
+skill must exist *before* the vault is cloned, which is `kb-setup`'s whole job. Both are
+properties of the framework's own four skills. An instance's team skills have neither:
+they serve the enumerable set of project repos the instance wires anyway, so per-repo
+copies (D1's "adding files stays open to you") cost less than a second published plugin.
+The trigger for revisiting is stated so an instance need not re-derive it — three or more
+wired repos, or people needing the team skills in repos that carry no copies — and the
+work at that point is renaming (`name`, `displayName`, `author`, `repository`, and the
+marketplace's `name`), with `skills` still pointing at `.claude/skills/`. The duplicate
+`kb-*` that then appears under the instance's namespace is harmless: byte-identical
+content by construction, and plugin namespacing keeps the two from colliding — the same
+"both sets are live at once" property the README already relies on inside a vault.
+
 ## D3 — The linter is the schema
 
 **Context.** The lint stage was a prose checklist, so "is this note valid?" depended on
