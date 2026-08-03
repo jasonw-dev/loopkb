@@ -23,8 +23,14 @@ Run the maintenance loop. You MUST be inside the vault repo.
    vocabulary, and an unset-up vault has no `_meta/` write rule in force yet.
 4. `git status` — if there are uncommitted changes outside `_inbox/`, STOP and ask the
    user; that is someone's work in progress.
-5. **Take the lease**: `python3 scripts/lease.py acquire`. Exit 1 means another run
+5. **Take the lease**: pick a run id for this run (`kb-loop-<YYYYMMDD-HHMMSS>` will do)
+   and pass it to every lease command of the run:
+   `python3 scripts/lease.py acquire --session <run-id>`. Exit 1 means another run
    holds it — report who and stop. Nothing below runs without the lease.
+   State the run id explicitly: each command you issue is a separate process, and the
+   lock's default session identity is the parent shell — so a `release` without
+   `--session <run-id>` refuses the very lock this run holds, and the vault stays
+   locked for the rest of the TTL.
 6. `git pull --rebase --autostash` (inbox may legitimately hold uncommitted human
    annotations — autostash carries them across the rebase).
    If the autostash pop conflicts: do not discard either side. Keep the rebased file
@@ -96,7 +102,8 @@ is merged or closed (`git push origin --delete <branch>`; `git branch -D <branch
    On conflict: rebase and retry; if the conflict cannot be resolved,
    abort, keep the work on a local branch, and tell the user sync is pending.
    Never force-push main (see CLAUDE.md guardrails for the `kb-loop/*` branch rule).
-5. **Release the lease**: `python3 scripts/lease.py release`. Do this on every exit path
+5. **Release the lease**: `python3 scripts/lease.py release --session <run-id>` — the same
+   run id pre-flight acquired with. Do this on every exit path
    after a *successful* acquire, aborts and errors included — a lease left behind blocks
    the next run for two hours. If pre-flight step 5 failed, do NOT release: that lock is
    the other run's, and `release` refuses it (exit 1) for exactly that reason. A release

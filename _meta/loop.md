@@ -32,10 +32,18 @@ work (competing commits in `autonomous`, duplicate proposals in `reviewed`), reb
 storms, and two digests that each describe half a run. This holds in both modes.
 
 ```
-python3 scripts/lease.py acquire      # exit 1 = someone else is running; stop
+python3 scripts/lease.py acquire --session <run-id>   # exit 1 = someone else is running; stop
 ...the run...
-python3 scripts/lease.py release      # on every exit path AFTER a successful acquire
+python3 scripts/lease.py release --session <run-id>   # every exit path AFTER a successful acquire
 ```
+
+`<run-id>` is any string identifying this run (`kb-loop-<YYYYMMDD-HHMMSS>` will do), and
+both commands must carry the same one. The lock records a session so that two terminals
+sharing a holder name cannot refresh their way into a concurrent run; the *default*
+session is the parent process, which differs between the separate commands one run
+issues — so a release that does not name the run refuses the run's own lock and leaves
+the vault locked until the TTL. `KB_LOOP_SESSION` sets the same value as an environment
+variable, and `scripts/lease.py status` reports the id the current lock carries.
 
 The lease is an orphan branch `kb-loop-lock` on `origin` recording holder and
 acquisition time. A lock older than 2 hours is stale and may be replaced. With no

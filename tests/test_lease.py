@@ -206,6 +206,50 @@ class LeaseTest(TempDirTestCase):
         self.assertIn("in another session", proc.output)
         self.assertEqual(self.remote_lock(), held)
 
+    def test_an_explicit_session_ties_acquire_and_release_together(self) -> None:
+        """`--session` beats the environment: it is how a run states its own identity."""
+        self.lease(self.alpha, "acquire", "--session", "run-42", session="shell-one")
+        proc = self.lease(self.alpha, "release", "--session", "run-42", session="shell-two")
+        self.assertEqual(proc.returncode, 0, proc.output)
+        self.assertEqual(self.remote_lock(), "")
+
+    def test_the_default_session_does_not_survive_a_new_shell(self) -> None:
+        """The trap `--session` exists for, pinned.
+
+        Every lease command of a real run is a separate process — an agent issues
+        `acquire` and `release` as two commands. The parent-process fallback gives
+        them different ids, so a release that does not name the run refuses the lock
+        that run is holding. Naming it releases it.
+        """
+        env = dict(self.env)
+        env["KB_LOOP_HOLDER"] = "holder-a"
+        env.pop("KB_LOOP_SESSION", None)
+
+        def in_its_own_shell(*args: str) -> str:
+            # The trailing `:` stops sh from exec'ing python in its own process, so
+            # python really does get a fresh parent — as it does under any agent.
+            command = " ".join([sys.executable, str(SCRIPTS / "lease.py"), *args]) + "; :"
+            proc = subprocess.run(
+                ["sh", "-c", command], capture_output=True, text=True, cwd=str(self.alpha), env=env
+            )
+            return proc.stdout + proc.stderr
+
+        acquired = in_its_own_shell("acquire")
+        self.assertIn("acquired by holder-a", acquired)
+        self.assertIn("--session", acquired, "acquire must name the id it had to invent")
+
+        blind = in_its_own_shell("release")
+        self.assertIn("refusing to release", blind)
+        self.assertTrue(self.remote_lock(), "the run's own lock must survive its blind release")
+
+        message = self.git(self.alpha, "log", "-1", "--format=%B", "refs/heads/kb-loop-lock")
+        session = next(
+            line.partition(":")[2].strip() for line in message.splitlines() if line.startswith("session:")
+        )
+        released = in_its_own_shell("release", "--session", session)
+        self.assertIn("released", released)
+        self.assertEqual(self.remote_lock(), "")
+
     def test_forced_release_clears_someone_elses_lock(self) -> None:
         """The escape hatch for a run that is dead before its TTL."""
         self.lease(self.alpha, "acquire")

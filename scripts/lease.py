@@ -2,8 +2,8 @@
 """loopkb concurrency lease — one loop run at a time, across machines.
 
 Usage:
-    python3 scripts/lease.py acquire [--holder NAME] [--ttl-hours 2]
-    python3 scripts/lease.py release [--holder NAME] [--ttl-hours 2] [--force]
+    python3 scripts/lease.py acquire [--holder NAME] [--session ID] [--ttl-hours 2]
+    python3 scripts/lease.py release [--holder NAME] [--session ID] [--ttl-hours 2] [--force]
     python3 scripts/lease.py status  [--ttl-hours 2]
 
 Mechanism: an orphan branch `kb-loop-lock` holding a single empty commit whose
@@ -38,12 +38,20 @@ is two steps, so the publish itself has to be the atomic test:
   * with no remote, `git update-ref <ref> <new> <expected>` gives the same
     semantics against the local ref (an empty `<expected>` means "must not exist").
 
-Sessions: the lock also records a session id (`KB_LOOP_SESSION`, else the parent
-process id). Only the same holder in the same session may refresh a live lock —
-otherwise two terminals on one machine, sharing a holder name, would each
-"refresh" their way into a concurrent run. A dead run's lock is cleared by
-`release` or by the TTL, not by a second terminal inheriting it. Locks written by
-older versions carry no session and stay refreshable by their holder.
+Sessions: the lock also records a session id (`--session`, else `KB_LOOP_SESSION`,
+else the parent process id). Only the same holder in the same session may refresh
+or release a live lock — otherwise two terminals on one machine, sharing a holder
+name, would each "refresh" their way into a concurrent run. A dead run's lock is
+cleared by `release` or by the TTL, not by a second terminal inheriting it. Locks
+written by older versions carry no session and stay refreshable by their holder.
+
+**A run must state its own session id.** The parent-process fallback identifies a
+run only while every lease command of that run shares one parent shell. An agent
+issues `acquire` and `release` as separate commands, each in a fresh shell, so the
+fallback gives them different ids and the release refuses the very lock the run is
+holding. Pass the same `--session <run-id>` (or export `KB_LOOP_SESSION`) to both;
+`acquire` prints the id it recorded when it had to invent one, and `status` reports
+the id of whatever lock is held.
 
 Degradation: with no `origin` remote (a solo vault that never pushes), the lock
 is a purely local ref and the same rules apply.
@@ -100,8 +108,19 @@ def default_holder() -> str:
 
 
 def default_session() -> str:
-    """Distinguishes two runs that share a holder name — e.g. two terminals."""
+    """Distinguishes two runs that share a holder name — e.g. two terminals.
+
+    The parent process id is a fallback, not an identity: it holds only while every
+    lease command of a run shares one parent shell. A run whose commands are separate
+    invocations must say who it is with `--session`.
+    """
     return os.environ.get("KB_LOOP_SESSION") or str(os.getppid())
+
+
+def resolve_session(args: argparse.Namespace) -> tuple[str, bool]:
+    """(session id, whether the caller stated it). An invented id is worth printing."""
+    stated = args.session or os.environ.get("KB_LOOP_SESSION")
+    return (stated, True) if stated else (default_session(), False)
 
 
 def now_iso() -> str:
@@ -249,7 +268,7 @@ def report_failure(status: str, detail: str) -> int:
 
 def cmd_acquire(args: argparse.Namespace) -> int:
     holder = args.holder or default_holder()
-    session = default_session()
+    session, stated = resolve_session(args)
     sha = fetch_lock()
 
     if sha:
@@ -271,8 +290,8 @@ def cmd_acquire(args: argparse.Namespace) -> int:
                 f"lease: held by {info['holder']}{where} since {info['acquired']} ({minutes}m ago) — "
                 f"not stale until {args.ttl_hours}h. Another loop run is in progress; stop here."
                 + (
-                    " If that run is dead, clear it with "
-                    "`python3 scripts/lease.py release --force`."
+                    " If this IS that run, repeat its `--session <run-id>`; if that run "
+                    "is dead, clear it with `python3 scripts/lease.py release --force`."
                     if same_identity
                     else ""
                 ),
@@ -285,13 +304,20 @@ def cmd_acquire(args: argparse.Namespace) -> int:
     if status != "ok":
         return report_failure(status, detail)
     scope = "origin" if has_remote() else "local only (no origin remote)"
-    print(f"lease: acquired by {holder} — {scope}")
+    print(f"lease: acquired by {holder} (session {session}) — {scope}")
+    if not stated:
+        print(
+            f"lease: no session id was given, so this run is {session} (its parent process). "
+            f"Release it with `--session {session}` — a later command runs in a different "
+            "shell and would derive a different id.",
+            file=sys.stderr,
+        )
     return 0
 
 
 def cmd_release(args: argparse.Namespace) -> int:
     holder = args.holder or default_holder()
-    session = default_session()
+    session, _ = resolve_session(args)
     sha = fetch_lock()
     if not sha:
         print("lease: was not held — nothing to release")
@@ -303,12 +329,19 @@ def cmd_release(args: argparse.Namespace) -> int:
     ours = info["holder"] == holder and info["session"] in ("", session)
     live = held_for is not None and held_for < timedelta(hours=args.ttl_hours)
     if not ours and live and not args.force:
-        where = " in another session" if info["holder"] == holder else ""
+        same_identity = info["holder"] == holder
+        where = " in another session" if same_identity else ""
+        hint = (
+            f" If this IS that run, name its session: `--session {info['session']}` — the "
+            "default id is the parent process, which differs between two commands of one run."
+            if same_identity and info["session"]
+            else ""
+        )
         print(
             f"lease: refusing to release — the lock is held by {info['holder']}{where} since "
-            f"{info['acquired']}, not by this run ({holder}). Deleting it would let a second "
-            f"loop run start while that one is still working. It goes stale on its own after "
-            f"{args.ttl_hours}h; pass --force only if you know that run is dead.",
+            f"{info['acquired']}, not by this run ({holder}/{session}). Deleting it would let a "
+            f"second loop run start while that one is still working. It goes stale on its own "
+            f"after {args.ttl_hours}h; pass --force only if you know that run is dead.{hint}",
             file=sys.stderr,
         )
         return 1
@@ -348,6 +381,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     minutes = "unknown" if held_for is None else f"{int(held_for.total_seconds() // 60)}m"
     stale = held_for is not None and held_for >= timedelta(hours=args.ttl_hours)
     print(f"lease: held by {info['holder']}")
+    print(f"session: {info['session'] or '(none recorded)'}")
     print(f"acquired: {info['acquired']} ({minutes} ago)")
     print(f"stale: {'yes' if stale else 'no'} (ttl {args.ttl_hours}h)")
     return 0
@@ -359,11 +393,19 @@ def main(argv: list[str]) -> int:
 
     acquire = subparsers.add_parser("acquire", help="take the lease, failing if it is held and fresh")
     acquire.add_argument("--holder", help="identity recorded in the lock (default: git user @ hostname)")
+    acquire.add_argument(
+        "--session",
+        help="this run's id, repeated on release (default: KB_LOOP_SESSION, else the parent process)",
+    )
     acquire.add_argument("--ttl-hours", type=float, default=2.0, help="age after which a lock is stale")
     acquire.set_defaults(func=cmd_acquire)
 
     release = subparsers.add_parser("release", help="drop the lease this run holds")
     release.add_argument("--holder", help="identity to match against the lock (default: as acquire)")
+    release.add_argument(
+        "--session",
+        help="the run id given to acquire — without it the default differs and the release is refused",
+    )
     release.add_argument("--ttl-hours", type=float, default=2.0, help="age after which a lock is stale")
     release.add_argument(
         "--force",

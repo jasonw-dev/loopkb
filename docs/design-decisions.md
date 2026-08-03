@@ -327,6 +327,19 @@ TTL, not inherited by the next terminal), and that changing a linter rule now me
 changing its test too. All three are the intended price: they make the rule harder to
 change accidentally, which is what a rule binding every instance should be.
 
+*Amended: a run states its session id; it is not inferred.* The session that closed the
+last hole above defaulted to the parent process id, which identifies a run only while all
+of its lease commands share one shell. An agent's do not — `acquire` and `release` are
+separate commands in separate shells — so once D5's amendment made `release` refuse a lock
+that is not its own, that default had every agent-driven run refusing to release its *own*
+lock, leaving the vault locked for the full TTL after a healthy run. `acquire` and
+`release` now take `--session <run-id>`; the loop passes one id to both, `acquire` prints
+the id when it had to invent one, and `status` reports the id the lock carries. The
+property is unchanged — two terminals are still two runs — but it is now stated by the run
+instead of inferred from its process tree, which is the same lesson as the lock itself:
+identity that matters must be recorded, not derived from the environment that happens to
+be running the command.
+
 ## D11 — Per-platform entry points, one procedure
 
 **Context.** The rule system was agent-agnostic from the start — `AGENTS.md`, `CLAUDE.md`,
