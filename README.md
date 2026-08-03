@@ -138,15 +138,17 @@ plugin still has everything it needs.
 
 ### Using with Codex
 
-[`integrations/codex/`](integrations/codex/) does the same job for
-[Codex CLI](https://developers.openai.com/codex/): four pointer skills you copy into
-`~/.agents/skills/`, after which `$kb-setup`, `$kb-save`, `$kb-search` and `$kb-loop`
-work in every repo. Each is a dozen lines — resolve the vault, then read
+[Codex CLI](https://developers.openai.com/codex/) needs no install at all: it loads
+`.agents/skills` from the working directory up to the repo root, and every vault carries
+[`.agents/skills/`](.agents/skills/) — four pointer skills, so `$kb-setup`, `$kb-save`,
+`$kb-search` and `$kb-loop` are live the moment you open a vault clone. Each is a dozen
+lines — resolve the vault (step 0: this repo, if it has `_meta/loop.md`), then read
 `<KB_VAULT>/.claude/skills/<name>/SKILL.md` and follow it — so the vault's SKILL.md files
 remain the one definition of every procedure, exactly as the plugin arrangement keeps
-them. Install steps, the optional global `AGENTS.md` snippet, and the sandbox/approval
-notes (Codex denies network by default, which every git operation here needs) are in
-[`integrations/codex/README.md`](integrations/codex/README.md).
+them. Copying those four into `~/.agents/skills/` is optional and only buys you the kb
+skills in repos that carry no copies. That, the optional global `AGENTS.md` snippet, and
+the sandbox/approval notes (Codex denies network by default, which every git operation
+here needs) are in [`integrations/codex/README.md`](integrations/codex/README.md).
 
 Any other agent needs no integration at all: point it at
 [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) and tell it to read the SKILL.md for the
@@ -195,9 +197,9 @@ loopkb 是給 AI Agent 用的知識庫框架：Obsidian 相容、git 原生、�
 任何 MR 平台。想要事前審查就改成 `reviewed`，破壞性動作改走 MR。`evergreen` 兩種模式下都只有
 人類能授予。
 
-**跨平台**：操作程序只有一份，放在 vault 的 `.claude/skills/*/SKILL.md`；Claude Code 走 plugin、Codex CLI 走
-`integrations/codex/` 的四個指標 skill（複製到 `~/.agents/skills/`），其他 agent 直接被指去讀同一份 SKILL.md——
-各平台只有進入點不同，程序不會有第二份副本。
+**跨平台**：操作程序只有一份，放在 vault 的 `.claude/skills/*/SKILL.md`；Claude Code 走 plugin、Codex CLI
+則是每個 vault 都內建 `.agents/skills/` 的四個指標 skill（clone 下來就能用，不用安裝），
+其他 agent 直接被指去讀同一份 SKILL.md——各平台只有進入點不同，程序不會有第二份副本。
 
 結構上：型態用資料夾、領域用封閉 tag 字彙；框架（本 template）與實例（各團隊/個人 vault）
 分離，實例設定全部集中在 `_meta/instance.md` 一個檔案，所以拉模板更新只要 `git merge upstream/main`

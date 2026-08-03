@@ -349,6 +349,26 @@ instead of one per vendor; and `integrations/` joins `docs/`, `scripts/` and `te
 the linter's non-note directories, since a `SKILL.md` under it is not a note and four of
 them would otherwise collide on basename uniqueness.
 
+*Amended: the entry points ship in the vault, not in `$HOME`.* The decision is intact —
+one procedure, thin per-platform pointers — but the delivery moved. Codex loads
+`.agents/skills` from the working directory up to the repository root as well as from
+`$HOME/.agents/skills`, so the four pointers now live at `.agents/skills/*/SKILL.md` in
+the vault itself and every clone gets them with nothing installed; `integrations/codex/`
+keeps only the README that explains the mechanism, and the global install is demoted to
+optional — its one remaining job is the kb skills in repos that carry no copies. What
+prompted it was an instance shipping its own team skills exactly that way, which made the
+asymmetry obvious: the vault was asking Codex users to install by hand what it could
+simply carry. Two consequences follow. The pointers now also run *inside* vaults, so each
+gained a step 0 — a repo containing `_meta/loop.md` is the vault, and `KB_VAULT`
+resolution is skipped — which incidentally makes `kb-loop`'s recommended
+vault-as-workspace setup the zero-configuration path. And instances inherit the pattern:
+a team skill shipped as byte-identical twins in `.claude/skills/` and `.agents/skills/`,
+both pointing at the instance's own canonical guide, serves both agent ecosystems with no
+install and no second copy of the procedure. The price is that `.agents` joins the
+linter's non-note directories for the same reason `integrations/` did, and that a repo
+carrying copies can hold a stale pointer — bounded, since a pointer only ever names a
+path.
+
 ## D12 — Learned rules are instance-owned; rejection memory is derived, not carried
 
 **Context.** A final pre-freeze review put two of the framework's own promises side by

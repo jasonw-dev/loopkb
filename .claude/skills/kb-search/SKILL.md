@@ -87,9 +87,11 @@ join the vault. Every repo wired to the same vault imports the same file, so the
 is configured a single time per machine.
 
 Per-repo wiring can be skipped when the agent carries its own entry points: the Claude
-Code plugin (`/loopkb:kb-search`, `/loopkb:kb-save`) or the Codex skills in
-`integrations/codex/` — see the framework README and `integrations/codex/README.md`. The
-`KB_VAULT` line is still needed either way, to say *which* vault to read.
+Code plugin (`/loopkb:kb-search`, `/loopkb:kb-save`), or the Codex pointer skills from
+the vault's `.agents/skills/` copied into `~/.agents/skills/` — see the framework README
+and `integrations/codex/README.md`. The `KB_VAULT` line is still needed either way, to
+say *which* vault to read — except inside the vault itself, where the pointers' step 0
+recognises the repo as the vault.
 
 If the project repo also serves non-Claude agents, put the same section (or a
 pointer to CLAUDE.md) in its AGENTS.md — those agents do not read CLAUDE.md by default.

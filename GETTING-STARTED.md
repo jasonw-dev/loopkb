@@ -13,9 +13,10 @@ There are exactly two jobs around a vault, and most people only ever do the seco
 `_meta/instance.md`, grant your teammates write access, and share the vault URL.
 See "Starting a new instance (creator, once per team)" below.
 
-**Member** — once per machine. Install your agent's entry points and run
-`kb-setup <vault URL>`. There is a path for Claude Code, one for Codex CLI, and a manual
-one for any other agent — see "Joining a vault (member, once per machine)" right below.
+**Member** — once per machine. Get your agent's entry points (Claude Code installs a
+plugin; Codex needs nothing inside a vault) and run `kb-setup <vault URL>`. There is a
+path for Claude Code, one for Codex CLI, and a manual one for any other agent — see
+"Joining a vault (member, once per machine)" right below.
 
 The creator is also a member: creating the vault does not wire your own machine, so you
 run `kb-setup` too.
@@ -47,27 +48,32 @@ project repo imports. Then it tells you the three actions below. Nothing else to
 
 ### Codex CLI
 
-You never clone the vault yourself here either — you do install four small files first.
-Copy the pointer skills into Codex's personal skills directory, then say one sentence:
+**Nothing to install inside the vault.** Codex loads `.agents/skills` from the working
+directory up to the repo root, and every vault carries
+`.agents/skills/{kb-setup,kb-save,kb-search,kb-loop}/SKILL.md` — so in a vault clone the
+four skills are simply live. Each is a dozen lines that resolve the vault and then read
+the real procedure out of `.claude/skills/`, so nothing is duplicated and nothing drifts.
 
-```bash
-mkdir -p ~/.agents/skills
-for s in kb-setup kb-save kb-search kb-loop; do
-  mkdir -p ~/.agents/skills/$s
-  curl -fsSL -o ~/.agents/skills/$s/SKILL.md \
-    https://raw.githubusercontent.com/jasonw-dev/loopkb/main/integrations/codex/skills/$s/SKILL.md
-done
-```
+Joining, then, means getting a clone. If a teammate's vault URL is all you have, fetch
+the four framework copies once into `~/.agents/skills/` (see below) and say:
 
 ```
 $kb-setup https://github.com/<org>/<vault-repo>.git
 ```
 
-Each of those files is a dozen lines that resolve the vault and then read the real
-procedure out of it, so nothing is duplicated and nothing drifts. Codex's default sandbox
-denies network access, so it will ask for approval when `kb-setup` clones — expect the
-same at every later push and pull. Details, the optional global `AGENTS.md` snippet and
-the deprecated custom-prompts variant: [`integrations/codex/README.md`](integrations/codex/README.md).
+**The global copy is optional** — its only purpose is having `kb-search` and `kb-save`
+while you work in repos that carry no copies of these files:
+
+```bash
+mkdir -p ~/.agents/skills
+cp -R <vault>/.agents/skills/kb-* ~/.agents/skills/     # from any vault clone
+```
+
+Codex's default sandbox denies network access, so it will ask for approval when
+`kb-setup` clones — expect the same at every later push and pull. Details, the
+curl-from-the-framework variant for a machine with no clone yet, the optional global
+`AGENTS.md` snippet and the deprecated custom-prompts fallback:
+[`integrations/codex/README.md`](integrations/codex/README.md).
 
 ### Any other agent
 
@@ -90,8 +96,8 @@ anything.
 
 ### Multiple vaults on one machine
 
-Fully supported. The entry points — plugin or Codex skills — are installed once and serve
-every vault; run `kb-setup` once per vault. Each vault gets its own
+Fully supported. The entry points — the plugin, and the Codex skills every vault carries
+(plus an optional global copy) — serve every vault; run `kb-setup` once per vault. Each vault gets its own
 `~/.claude/<vault-name>.md`, and each wired
 project repo imports the file of the vault it belongs to — so a repo can point at the
 team vault while another points at your personal one.
@@ -326,7 +332,12 @@ Work through this checklist — the instance is ready when every box is checked:
       corrections, and it stays yours across template updates. This is the **only** file
       you fill in —
       every other file is framework-owned, which is what keeps template updates
-      mergeable (see "Updating an instance" below).
+      mergeable (see "Updating an instance" below). *Adding* files is a different matter
+      and stays open to you: an instance may ship its own team skills as byte-identical
+      thin-pointer twins in `.claude/skills/<name>/SKILL.md` and
+      `.agents/skills/<name>/SKILL.md`, both pointing at the instance's own canonical
+      guide in the vault — Claude Code reads the first, Codex the second, and every clone
+      gets them with nothing to install.
 - [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
       `autonomous` (agent commits everything, you review `_meta/digest.md` and revert).
       Switch to `reviewed` if destructive actions should wait for your approval — see
@@ -487,7 +498,7 @@ to correct.
 
 **兩種角色**：**建立者**（每個團隊一次：從 template 開新 repo、填 `_meta/instance.md`、給團隊成員權限、把 vault URL 發出去）與**成員**（每台機器一次：裝 plugin、跑 `kb-setup <vault URL>`）。建立者自己也是成員——建好 vault 不等於這台機器已經接好。
 
-**加入一個 vault**：三條路徑，終點相同（一份 vault clone + `~/.claude/<vault-name>.md` 裡的 `KB_VAULT:` 一行）。**Claude Code**：你不用自己 `git clone`——裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫檔都由 agent 完成。**Codex CLI**：先把 `integrations/codex/skills/` 底下四個指標檔複製到 `~/.agents/skills/`，再說 `$kb-setup <vault URL>`（Codex 預設沙箱擋網路，clone/push 時會跳出授權請求）。**其他 agent**：上面英文段落有手動四步驟——這條路徑確實要你自己 clone。
+**加入一個 vault**：三條路徑，終點相同（一份 vault clone + `~/.claude/<vault-name>.md` 裡的 `KB_VAULT:` 一行）。**Claude Code**：你不用自己 `git clone`——裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫檔都由 agent 完成。**Codex CLI**：vault 內不用裝任何東西——Codex 會自動載入 repo 內的 `.agents/skills/`，而每個 vault 都帶著那四個指標檔；只有在「想在沒有這些檔案的專案 repo 裡用 kb 技能」時，才選擇性地把 `<vault>/.agents/skills/kb-*` 複製一份到 `~/.agents/skills/`（Codex 預設沙箱擋網路，clone/push 時會跳出授權請求）。**其他 agent**：上面英文段落有手動四步驟——這條路徑確實要你自己 clone。
 
 **跨平台**：真正的操作程序只有一份，就在 vault 的 `.claude/skills/*/SKILL.md`；各平台的整合檔只是幾行的指標，負責找到 vault 再去讀那一份，所以不會有第二份會走鐘的副本。
 

@@ -1,35 +1,43 @@
 # loopkb for Codex CLI
 
-Four thin entry points that let [Codex CLI](https://developers.openai.com/codex/) run the
-vault's `kb-setup` / `kb-save` / `kb-search` / `kb-loop` procedures in any repo.
+**There is nothing to install.** Every vault carries `.agents/skills/{kb-setup,kb-save,
+kb-search,kb-loop}/SKILL.md`, and [Codex CLI](https://developers.openai.com/codex/) loads
+`.agents/skills` from your working directory up to the repository root. So the four
+skills are live the moment you open a vault — or any repo that carries copies of them —
+with no setup step at all. Type `$` in the composer to invoke one (`/skills` to browse);
+Codex also picks them up implicitly when a request matches a skill's `description`.
 
-They are **pointers, not copies**: each one resolves the vault, then reads
-`<KB_VAULT>/.claude/skills/<name>/SKILL.md` and follows it. The vault's SKILL.md files
-stay the single source of truth for all agents, so there is nothing here to keep in sync.
-That is also why the four files are only a dozen lines each — if you find yourself
-editing a procedure here, it belongs in the vault instead.
+Those four files are **pointers, not copies**: each one resolves the vault — step 0 is
+"if this repo has `_meta/loop.md`, this repo IS the vault" — then reads
+`<KB_VAULT>/.claude/skills/<name>/SKILL.md` and follows it. The vault's `.claude/skills/`
+files stay the single source of truth for all agents, so there is nothing here to keep in
+sync. That is why the four files are only a dozen lines each — if you find yourself
+editing a procedure in `.agents/skills/`, it belongs in `.claude/skills/` instead.
 
-## Install
+## Optional: install them globally
 
-Codex loads skills from `$HOME/.agents/skills` (personal, every repo) and from
-`.agents/skills` in the working directory up to the repository root (per-repo). Personal
-is what you want — the point is having `kb-search` while you debug *other* projects:
+Codex also loads skills from `$HOME/.agents/skills`, which applies in *every* repo. That
+is worth doing for exactly one reason: using `kb-search` and `kb-save` while you work in
+repos that carry no copies of these files. Copy them out of any vault clone:
+
+```bash
+mkdir -p ~/.agents/skills
+cp -R <vault>/.agents/skills/kb-* ~/.agents/skills/
+```
+
+No vault clone yet? Fetch the framework copies, then `$kb-setup <vault repo URL>`:
 
 ```bash
 mkdir -p ~/.agents/skills
 for s in kb-setup kb-save kb-search kb-loop; do
   mkdir -p ~/.agents/skills/$s
   curl -fsSL -o ~/.agents/skills/$s/SKILL.md \
-    https://raw.githubusercontent.com/jasonw-dev/loopkb/main/integrations/codex/skills/$s/SKILL.md
+    https://raw.githubusercontent.com/jasonw-dev/loopkb/main/.agents/skills/$s/SKILL.md
 done
 ```
 
-Already have a vault clone? Every vault carries this directory, so copy from it instead:
-`cp -R <vault>/integrations/codex/skills/kb-* ~/.agents/skills/`.
-
-Then restart Codex if the skills do not appear. Invoke one by typing `$` in the composer
-(or `/skills` to browse) — Codex also picks them up implicitly when a request matches a
-skill's `description`. First time on this machine: `$kb-setup <vault repo URL>`.
+Restart Codex if the skills do not appear. A global copy can go stale while the vault's
+own copy cannot — refresh it from a vault clone whenever the framework changes.
 
 ## Where the vault path is stored
 
@@ -38,6 +46,8 @@ skill's `description`. First time on this machine: `$kb-setup <vault repo URL>`.
 text with no Claude Code semantics, and it is deliberately the *only* definition of that
 contract, so a machine running both agents is wired once, not twice. Read it directly:
 `@~/.claude/<vault-name>.md` is Claude Code import syntax and means nothing to Codex.
+Inside the vault itself you never need this file: the skills' step 0 answers "which
+vault" before the question is asked.
 
 ## Optional: a global AGENTS.md note
 
@@ -68,12 +78,19 @@ restriction for a vault session (`--sandbox danger-full-access --ask-for-approva
 or allow the specific command prefixes in `~/.codex/config.toml`. A vault with no `origin`
 remote is fully offline by design and never triggers any of this.
 
-Two more consequences worth knowing:
+One more consequence worth knowing: run from *another* repo, the vault is outside the
+workspace you opened Codex in, so writing to it needs an approval too, or the vault path
+added as a writable root in `config.toml`. Opening the vault itself as the workspace —
+the zero-install case above, and how `kb-loop` is meant to be run — removes those
+out-of-workspace writes and leaves only the network approvals.
 
-- The vault is usually **outside** the workspace you opened Codex in, so writing to it
-  needs an approval too, or the vault path added as a writable root in `config.toml`.
-- `kb-loop` is best run with the vault itself as the workspace — that removes the
-  out-of-workspace writes and leaves only the network approvals.
+## Shipping your own team skills the same way
+
+An instance is free to add its own skills alongside the kb ones. The arrangement that
+serves both agent ecosystems at once is a pair of byte-identical thin pointers —
+`.claude/skills/<name>/SKILL.md` and `.agents/skills/<name>/SKILL.md` — each pointing at
+the instance's own canonical guide in the vault. Claude Code reads the first, Codex the
+second, and every clone gets them with no install.
 
 ## Legacy: custom prompts
 
@@ -81,5 +98,5 @@ Codex's older custom-prompt mechanism (`~/.codex/prompts/<name>.md`, invoked as
 `/prompts:<name>`) is **deprecated** in favour of skills, and its files must sit directly
 in that folder — subdirectories are not scanned. If you are pinned to a build without
 skills, the same pointer works as a prompt: copy the body (everything after the YAML
-frontmatter) of any file in `skills/` into `~/.codex/prompts/kb-search.md` and call it
-with `/prompts:kb-search`. Prefer skills wherever they are available.
+frontmatter) of any file in `.agents/skills/` into `~/.codex/prompts/kb-search.md` and
+call it with `/prompts:kb-search`. Prefer skills wherever they are available.
