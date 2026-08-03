@@ -86,17 +86,12 @@ Each person creates `~/.claude/<vault-name>.md` once — `kb-setup` writes it wh
 join the vault. Every repo wired to the same vault imports the same file, so the path
 is configured a single time per machine.
 
-Per-repo wiring can be skipped when the agent carries its own entry points: the Claude
-Code plugin (`/loopkb:kb-search`, `/loopkb:kb-save`), or the Codex pointer skills from
-the vault's `.agents/skills/` copied into `~/.agents/skills/` — see the framework README
-and `integrations/codex/README.md`. The `KB_VAULT` line is still needed either way, to
-say *which* vault to read — except inside the vault itself, where the pointers' step 0
-recognises the repo as the vault.
+Per-repo wiring can be skipped when the agent carries its own entry points — the Claude
+Code plugin (`/loopkb:kb-search`, `/loopkb:kb-save`) is the one the framework ships. The
+`KB_VAULT` line is still needed either way, to say *which* vault to read.
 
 If the project repo also serves non-Claude agents, put the same section (or a
 pointer to CLAUDE.md) in its AGENTS.md — those agents do not read CLAUDE.md by default.
 `@~/.claude/<vault-name>.md` is **Claude Code import syntax**, not a general convention:
 a non-Claude agent must open `~/.claude/<vault-name>.md` itself and read the `KB_VAULT:`
-line out of it. Say that explicitly in the AGENTS.md copy. To state it once per machine
-instead of once per repo, `integrations/codex/README.md` has the global-`AGENTS.md`
-variant of this block.
+line out of it. Say that explicitly in the AGENTS.md copy.

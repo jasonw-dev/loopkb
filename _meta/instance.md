@@ -5,7 +5,7 @@
 
 This file is **owned by the instance**. Framework files (`CLAUDE.md`,
 `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`, `scripts/`, and the four
-`kb-*` skills under `.claude/skills/` and `.agents/skills/`) never carry
+`kb-*` skills under `.claude/skills/`) never carry
 instance-specific content, so pulling template updates
 (`git merge upstream/main`) leaves what you configure here alone — including the
 classification rules the loop learns from your corrections, which land in this file
@@ -13,7 +13,7 @@ too (see "Classification rule amendments" below). One exception,
 once: an instance's history is unrelated to the template's, so the very first
 merge needs `--allow-unrelated-histories` and conflicts on this file — keep your
 version (`git checkout --ours`). See GETTING-STARTED.md → "Updating an instance".
-The two skill directories are shared rather than exclusively framework-owned: an
+The skills directory is shared rather than exclusively framework-owned: an
 instance may add its own team skills beside the `kb-*` four, and since upstream never
 ships those names, a merge leaves them alone as well.
 

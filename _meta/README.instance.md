@@ -14,7 +14,7 @@ and maintains them; git is the sync, review and undo layer.">
 
 ## Joining this vault (once per machine)
 
-Install your agent's entry points, then say one sentence — `kb-setup <vault URL>` — and
+Install the Claude Code plugin, then say one sentence — `kb-setup <vault URL>` — and
 it clones the vault, validates it, and wires this machine. Nothing else to do.
 
 **Claude Code** — install the plugin (you never `git clone` anything yourself):
@@ -23,14 +23,6 @@ it clones the vault, validates it, and wires this machine. Nothing else to do.
 /plugin marketplace add jasonw-dev/loopkb
 /plugin install loopkb@loopkb
 ```
-
-**Codex CLI** — nothing to install *inside* the vault: it carries `.agents/skills/`,
-which Codex loads automatically in any clone, so `$kb-save` / `$kb-search` / `$kb-loop`
-work here out of the box. Bootstrapping the clone in the first place — and using the
-skills in repos that carry no copies — is the optional global install
-(`cp -R <vault>/.agents/skills/kb-* ~/.agents/skills/`, or curl them from the framework),
-then `$kb-setup <vault URL>`. That and the sandbox notes are in
-[`integrations/codex/README.md`](integrations/codex/README.md).
 
 **Any other agent** — the manual path (clone, write `~/.claude/<vault-name>.md`, point the
 agent at [AGENTS.md](AGENTS.md)) is in [GETTING-STARTED.md](GETTING-STARTED.md) →

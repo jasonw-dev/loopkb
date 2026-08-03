@@ -13,20 +13,21 @@ There are exactly two jobs around a vault, and most people only ever do the seco
 `_meta/instance.md`, grant your teammates write access, and share the vault URL.
 See "Starting a new instance (creator, once per team)" below.
 
-**Member** — once per machine. Get your agent's entry points (Claude Code installs a
-plugin; Codex needs nothing inside a vault) and run `kb-setup <vault URL>`. There is a
-path for Claude Code, one for Codex CLI, and a manual one for any other agent — see
-"Joining a vault (member, once per machine)" right below.
+**Member** — once per machine. Install the Claude Code plugin and run
+`kb-setup <vault URL>`. There is a path for Claude Code and a manual one for any other
+agent — see "Joining a vault (member, once per machine)" right below.
 
 The creator is also a member: creating the vault does not wire your own machine, so you
 run `kb-setup` too.
 
 ## Joining a vault (member, once per machine)
 
-Pick the path for the agent you use. All three end in the same place: a vault clone, and
+Pick the path for the agent you use. Both end in the same place: a vault clone, and
 a `~/.claude/<vault-name>.md` file holding one `KB_VAULT: <path>` line — the per-user
 wiring every agent reads. The procedures themselves live in the vault
 (`.claude/skills/*/SKILL.md`) and are agent-agnostic; only the way you *reach* them differs.
+The framework ships ready-made entry points for Claude Code only — every other agent takes
+the manual path below and reads the same files.
 
 ### Claude Code
 
@@ -46,36 +47,6 @@ kb-setup https://github.com/<org>/<vault-repo>.git
 the linter, and writes the per-user `~/.claude/<vault-name>.md` file that every wired
 project repo imports. Then it tells you the three actions below. Nothing else to do.
 
-### Codex CLI
-
-**Nothing to install inside the vault.** Codex loads `.agents/skills` from the working
-directory up to the repo root, and every vault carries
-`.agents/skills/{kb-setup,kb-save,kb-search,kb-loop}/SKILL.md` — so in a vault clone the
-four skills are simply live. Each is a dozen lines that resolve the vault and then read
-the real procedure out of `.claude/skills/`, so nothing is duplicated and nothing drifts.
-
-Joining, then, means getting a clone. If a teammate's vault URL is all you have, fetch
-the four framework copies once into `~/.agents/skills/` (see below) and say:
-
-```
-$kb-setup https://github.com/<org>/<vault-repo>.git
-```
-
-**The global copy is optional** — two things need it: `kb-search` and `kb-save` while you
-work in repos that carry no copies of these files, and the bootstrap above, when you have
-no clone to copy from yet:
-
-```bash
-mkdir -p ~/.agents/skills
-cp -R <vault>/.agents/skills/kb-* ~/.agents/skills/     # from any vault clone
-```
-
-Codex's default sandbox denies network access, so it will ask for approval when
-`kb-setup` clones — expect the same at every later push and pull. Details, the
-curl-from-the-framework variant for a machine with no clone yet, the optional global
-`AGENTS.md` snippet and the deprecated custom-prompts fallback:
-[`integrations/codex/README.md`](integrations/codex/README.md).
-
 ### Any other agent
 
 Four steps by hand — and yes, this path really does clone the vault yourself, because
@@ -92,14 +63,12 @@ there is no packaging mechanism to do it for you:
    repo so its agents do this on their own, see "Wiring a project repo" in
    `.claude/skills/kb-search/SKILL.md`.
 
-This is also the fallback for Claude Code or Codex when you would rather not install
-anything.
+This is also the fallback for Claude Code when you would rather not install anything.
 
 ### Multiple vaults on one machine
 
-Fully supported. The entry points — the plugin, and the Codex skills every vault carries
-(plus an optional global copy) — serve every vault; run `kb-setup` once per vault. Each vault gets its own
-`~/.claude/<vault-name>.md`, and each wired
+Fully supported. The plugin is installed once and serves every vault; run `kb-setup`
+once per vault. Each vault gets its own `~/.claude/<vault-name>.md`, and each wired
 project repo imports the file of the vault it belongs to — so a repo can point at the
 team vault while another points at your personal one.
 
@@ -347,11 +316,10 @@ Work through this checklist — the instance is ready when every box is checked:
       you fill in —
       every other file is framework-owned, which is what keeps template updates
       mergeable (see "Updating an instance" below). *Adding* files is a different matter
-      and stays open to you: an instance may ship its own team skills as byte-identical
-      thin-pointer twins in `.claude/skills/<name>/SKILL.md` and
-      `.agents/skills/<name>/SKILL.md`, both pointing at the instance's own canonical
-      guide in the vault — Claude Code reads the first, Codex the second, and every clone
-      gets them with nothing to install.
+      and stays open to you: an instance may ship its own team skills as thin pointers in
+      `.claude/skills/<name>/SKILL.md` that point at the instance's own canonical guide in
+      the vault — every clone gets them with nothing to install, and since upstream never
+      ships those names, a template merge leaves them alone.
 - [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
       `autonomous` (agent commits everything, you review `_meta/digest.md` and revert).
       Switch to `reviewed` if destructive actions should wait for your approval — see
@@ -393,9 +361,9 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] *Optional*: open the vault in Obsidian once to confirm it reads well. Obsidian is a
       human reading UI, nothing more — the vault is fully usable without it.
 - [ ] Grant your teammates write access to the repo — `autonomous` mode needs everyone
-      able to push `main` — then tell them how to join: install their agent's entry points,
+      able to push `main` — then tell them how to join: install the Claude Code plugin,
       then `kb-setup <your vault repo URL>`. Send them "Joining a vault (member, once per
-      machine)" above; it has a path for Claude Code, Codex CLI and any other agent.
+      machine)" above; it has the Claude Code path and the manual one for any other agent.
 
 If you run CI, wire `python3 scripts/lint.py` into it — one job per push keeps schema
 violations from ever reaching the weekly loop.
@@ -485,7 +453,7 @@ git checkout --ours README.md && git add README.md
 ```
 
 Everything else (CLAUDE.md, `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`,
-`.claude/skills/`, `.agents/skills/`, `scripts/`) is framework-owned and stays
+the `kb-*` skills in `.claude/skills/`, `scripts/`) is framework-owned and stays
 conflict-free from the second merge onward. If you edited one of those files locally,
 the merge will conflict there —
 that is the signal to move the customization into `_meta/instance.md` as a policy
@@ -513,9 +481,9 @@ to correct.
 
 **兩種角色**：**建立者**（每個團隊一次：從 template 開新 repo、填 `_meta/instance.md`、給團隊成員權限、把 vault URL 發出去）與**成員**（每台機器一次：裝 plugin、跑 `kb-setup <vault URL>`）。建立者自己也是成員——建好 vault 不等於這台機器已經接好。
 
-**加入一個 vault**：三條路徑，終點相同（一份 vault clone + `~/.claude/<vault-name>.md` 裡的 `KB_VAULT:` 一行）。**Claude Code**：你不用自己 `git clone`——裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫檔都由 agent 完成。**Codex CLI**：vault 內不用裝任何東西——Codex 會自動載入 repo 內的 `.agents/skills/`，而每個 vault 都帶著那四個指標檔；只有在「想在沒有這些檔案的專案 repo 裡用 kb 技能」時，才選擇性地把 `<vault>/.agents/skills/kb-*` 複製一份到 `~/.agents/skills/`（Codex 預設沙箱擋網路，clone/push 時會跳出授權請求）。**其他 agent**：上面英文段落有手動四步驟——這條路徑確實要你自己 clone。
+**加入一個 vault**：兩條路徑，終點相同（一份 vault clone + `~/.claude/<vault-name>.md` 裡的 `KB_VAULT:` 一行）。**Claude Code**：你不用自己 `git clone`——裝好 plugin（`/plugin marketplace add jasonw-dev/loopkb` → `/plugin install loopkb@loopkb`）後說一句 `kb-setup <vault 的 git URL>`，clone、驗證、寫檔都由 agent 完成。**其他 agent**：上面英文段落有手動四步驟——這條路徑確實要你自己 clone。
 
-**跨平台**：真正的操作程序只有一份，就在 vault 的 `.claude/skills/*/SKILL.md`；各平台的整合檔只是幾行的指標，負責找到 vault 再去讀那一份，所以不會有第二份會走鐘的副本。
+**跨平台**：真正的操作程序只有一份，就在 vault 的 `.claude/skills/*/SKILL.md`；框架只替 Claude Code 準備現成的進入點，其他 agent 直接被指去讀同一份檔案——規則檔（`_meta/`、`CLAUDE.md`、`AGENTS.md`）本來就是任何 agent 都讀得懂的純文字，所以程序不會有第二份會走鐘的副本。
 
 日常只有三個動作：
 

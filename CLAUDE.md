@@ -2,7 +2,7 @@
 
 This repository is a **loopkb vault**: a git-backed, Obsidian-compatible knowledge base
 maintained jointly by humans and AI agents. This file is the framework's source of truth
-for agent behavior. Other agents (Codex CLI, etc.) are pointed here via `AGENTS.md`.
+for agent behavior. Agents that read `AGENTS.md` instead are pointed here by it.
 
 ## What this vault is
 

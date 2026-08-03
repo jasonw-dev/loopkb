@@ -65,8 +65,6 @@ vault/
 ├── scripts/           ← lint.py (schema check) · lease.py (one loop run at a time)
 │                        verify_digest.py (the digest itemizes every risky action)
 ├── .claude/skills/    ← the four procedures (kb-setup/save/search/loop) — one definition
-├── .agents/skills/    ← Codex entry points — thin pointers to .claude/skills/, no copies
-├── integrations/      ← per-agent explanation docs (codex/) — mechanism and setup notes
 ├── troubleshooting/   ← symptom → cause → fix
 ├── decisions/         ← lightweight ADRs
 ├── guides/            ← how-to
@@ -100,27 +98,22 @@ CI release job fails with checksum mismatch after a dependency bump.
    any other git host.
 2. Read **[GETTING-STARTED.md](GETTING-STARTED.md)** — the two roles (creator vs. member),
    three daily actions, instance setup (one file to fill in), and how to pull template updates.
-3. Joining a vault that already exists? Install your agent's entry points (below) and say
-   `kb-setup <vault repo URL>` — that is the whole onboarding, and on the Claude Code and
-   Codex paths you never clone anything yourself. GETTING-STARTED.md → "Joining a vault
-   (member, once per machine)" has one sub-path per platform.
-4. Agents start at **[CLAUDE.md](CLAUDE.md)** (Codex etc. via [AGENTS.md](AGENTS.md)).
+3. Joining a vault that already exists? Install the Claude Code plugin (below) and say
+   `kb-setup <vault repo URL>` — that is the whole onboarding, and on that path you never
+   clone anything yourself. GETTING-STARTED.md → "Joining a vault (member, once per
+   machine)" also has the manual path for any other agent.
+4. Agents start at **[CLAUDE.md](CLAUDE.md)** (other agents via [AGENTS.md](AGENTS.md)).
 
 Requirements: git, Python 3 (stdlib only, for `scripts/`), and an AI coding agent —
-[Claude Code](https://claude.com/claude-code) or
-[Codex CLI](https://developers.openai.com/codex/) have ready-made entry points, and any
+[Claude Code](https://claude.com/claude-code) has ready-made entry points, and any
 other agent works through the same rule files in `_meta/` and the same procedures in
-[`.claude/skills/`](.claude/skills/) (see [`integrations/`](integrations/)).
+[`.claude/skills/`](.claude/skills/), read by hand.
 
 ## Using the skills outside a vault
 
 The vault's four skills live in `.claude/skills/` and load automatically when you
 open the vault itself. To get them in *other* repos — so `kb-save` and `kb-search`
-work while you are debugging some project — install your agent's entry points.
-
-### Using with Claude Code
-
-Install this repo as a Claude Code plugin:
+work while you are debugging some project — install this repo as a Claude Code plugin:
 
 ```
 /plugin marketplace add jasonw-dev/loopkb
@@ -137,21 +130,6 @@ Inside a vault both sets are live at once — the plugin's `loopkb:kb-*` skills 
 vault-local ones from `.claude/skills/`. That is by design and harmless: they resolve to
 the same files, so either name does the same thing, and a vault opened without the
 plugin still has everything it needs.
-
-### Using with Codex
-
-[Codex CLI](https://developers.openai.com/codex/) needs no install at all: it loads
-`.agents/skills` from the working directory up to the repo root, and every vault carries
-[`.agents/skills/`](.agents/skills/) — four pointer skills, so `$kb-setup`, `$kb-save`,
-`$kb-search` and `$kb-loop` are live the moment you open a vault clone. Each is a dozen
-lines — resolve the vault (step 0: this repo, if it has `_meta/loop.md`), then read
-`<KB_VAULT>/.claude/skills/<name>/SKILL.md` and follow it — so the vault's SKILL.md files
-remain the one definition of every procedure, exactly as the plugin arrangement keeps
-them. Copying those four into `~/.agents/skills/` is optional and buys two things: the kb
-skills in repos that carry no copies, and a way to run `$kb-setup <vault repo URL>` when
-you have no clone to copy from yet. That, the optional global `AGENTS.md` snippet, and
-the sandbox/approval notes (Codex denies network by default, which every git operation
-here needs) are in [`integrations/codex/README.md`](integrations/codex/README.md).
 
 Any other agent needs no integration at all: point it at
 [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) and tell it to read the SKILL.md for the
@@ -200,9 +178,9 @@ loopkb 是給 AI Agent 用的知識庫框架：Obsidian 相容、git 原生、�
 任何 MR 平台。想要事前審查就改成 `reviewed`，破壞性動作改走 MR。`evergreen` 兩種模式下都只有
 人類能授予。
 
-**跨平台**：操作程序只有一份，放在 vault 的 `.claude/skills/*/SKILL.md`；Claude Code 走 plugin、Codex CLI
-則是每個 vault 都內建 `.agents/skills/` 的四個指標 skill（clone 下來就能用，不用安裝），
-其他 agent 直接被指去讀同一份 SKILL.md——各平台只有進入點不同，程序不會有第二份副本。
+**跨平台**：操作程序只有一份，放在 vault 的 `.claude/skills/*/SKILL.md`；Claude Code 走 plugin，
+其他 agent 直接被指去讀同一份 SKILL.md（`_meta/` 的規則檔本來就是純文字，任何 agent 都讀得懂）——
+框架只提供 Claude Code 的現成進入點，程序則不會有第二份副本。
 
 結構上：型態用資料夾、領域用封閉 tag 字彙；框架（本 template）與實例（各團隊/個人 vault）
 分離，實例設定全部集中在 `_meta/instance.md` 一個檔案，所以拉模板更新只要 `git merge upstream/main`
