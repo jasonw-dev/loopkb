@@ -45,7 +45,7 @@ issues — so a release that does not name the run refuses the run's own lock an
 the vault locked until the TTL. `KB_LOOP_SESSION` sets the same value as an environment
 variable, and `scripts/lease.py status` reports the id the current lock carries.
 
-The lease is an orphan branch `kb-loop-lock` on `origin` recording holder and
+The lease is an orphan branch `kb-loop-lock` on `origin` recording holder, session and
 acquisition time. A lock older than 2 hours is stale and may be replaced. With no
 remote (solo vault) it degrades to a local ref with the same semantics. A run that
 aborts for any reason releases the lease before reporting — provided it acquired one.

@@ -127,10 +127,10 @@ since a healthy run releases it on the way out. Two legitimate ways out: **wait*
 a lock goes stale after 2h and the next run replaces it by itself, or — when you know that
 run is dead — clear it with `python3 scripts/lease.py release --force`. The `--force` is
 required by design: a plain `release` refuses to delete a lock it does not hold, so a run
-that lost the race cannot end the exclusivity of the run that won it. Your terminal is
-never the session that took the lock — the loop run is — which is why clearing it by hand
-takes `--force` rather than a plain `release`. `python3 scripts/lease.py status` shows who
-holds it, since when, and whether it has gone stale.
+that lost the race cannot end the exclusivity of the run that won it — and your terminal,
+which is not the session that took the lock either, cannot end it without saying it means
+to. `python3 scripts/lease.py status` shows who holds it, since when, and whether it has
+gone stale.
 
 If `release` exits non-zero because it could not reach `origin`, the lease is **not**
 released: your local ref is gone but the lock on `origin` still stands, and every other
