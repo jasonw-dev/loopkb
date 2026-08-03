@@ -151,6 +151,19 @@ of agent time (and the matching API cost). It is a weekly-coffee-break operation
 background daemon — a vault with hundreds of pending notes is drained over several runs,
 by design.
 
+#### When a run refuses to start
+
+`lease: held by …` means the lock is taken — most often by a previous run that crashed,
+since a healthy run releases it on the way out. Two legitimate ways out: **wait**, because
+a lock goes stale after 2h and the next run replaces it by itself, or — when you know that
+run is dead — clear it with `python3 scripts/lease.py release --force`. The `--force` is
+required by design: a plain `release` refuses to delete a lock it does not hold, so a run
+that lost the race cannot end the exclusivity of the run that won it.
+
+If `release` exits non-zero because it could not reach `origin`, the lease is **not**
+released: your local ref is gone but the lock on `origin` still stands, and every other
+clone sees the vault as locked. Rerun `release` once you are back online.
+
 ## Reviewing the loop's work
 
 The vault runs in one of two **governance modes**, set in `_meta/instance.md` →
