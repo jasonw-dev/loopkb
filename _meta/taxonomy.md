@@ -26,6 +26,11 @@ amendment in `_meta/instance.md` says otherwise:
 
 If none of these fit confidently, the item stays in `_inbox/` with a note explaining why.
 
+A note that **governs how work is done** — a workflow, a spec, a convention the team
+follows — is filed in `guides/` and tagged with the instance's process-style domain
+(usually `process`), because that tag is how agents find the rules nobody told them
+existed (`CLAUDE.md` → "Finding the rules that govern a piece of work").
+
 The set of type folders is whatever `_meta/templates/` defines — `scripts/lint.py`
 derives it from there, so an instance that adds a type folder adds its template too
 (and records it under "Extra type folders" in `_meta/instance.md`).

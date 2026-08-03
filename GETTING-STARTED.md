@@ -331,14 +331,14 @@ Work through this checklist — the instance is ready when every box is checked:
       The rule behind the split: a skill needs plugin distribution when its users cannot
       be enumerated (`kb-save`/`kb-search` run in any repo, or in none) or when it must
       exist *before* the vault is cloned (`kb-setup` bootstraps). Your own team skills
-      have neither property — they serve the handful of project repos you wire anyway,
-      so per-repo copies are the cheaper answer. If that stops holding, make your own
-      manifest then: renaming is nearly the whole job (`name`, `displayName`, `author`,
-      `repository`, and the marketplace's `name`), `skills` can keep pointing at
-      `.claude/skills/`, and the duplicate `kb-*` that appears under your namespace is
-      harmless — byte-identical content, and plugin namespacing keeps the two apart.
-      Trigger to revisit: three or more wired repos, or people who need the team skills
-      in repos that carry no copies.
+      have neither property — they are reached through your vault's `CLAUDE.md`, from
+      the repos you wire and from the vault itself, so there is nothing to distribute.
+      If that stops holding, make your own manifest then: renaming is nearly the whole
+      job (`name`, `displayName`, `author`, `repository`, and the marketplace's `name`),
+      `skills` can keep pointing at `.claude/skills/`, and the duplicate `kb-*` that
+      appears under your namespace is harmless — byte-identical content, and plugin
+      namespacing keeps the two apart. Trigger to revisit: people who need your team
+      skills loaded automatically, in repos that are not wired to your vault at all.
 - [ ] Fill `_meta/instance.md`: identity (note body language, vault scope), the domain
       tag vocabulary, and any policy overrides. Leave "Classification rule amendments"
       empty — that section is where the loop writes the rules it learns from your
@@ -349,9 +349,10 @@ Work through this checklist — the instance is ready when every box is checked:
       and stays open to you: an instance may ship its own team skills as thin pointers in
       `.claude/skills/<name>/SKILL.md` that point at the instance's own canonical guide in
       the vault — every clone gets them with nothing to install, and since upstream never
-      ships those names, a template merge leaves them alone. Shipping one incurs a duty at
-      wiring time: each repo you wire gets a copy, kept in sync with the canonical (the
-      wiring bullet below).
+      ships those names, a template merge leaves them alone. They stay in the vault and
+      nowhere else: a wired repo gets **no copy**, and its agents reach them through the
+      vault's `CLAUDE.md`, so shipping a skill incurs no per-repo duty at all (the wiring
+      bullet below).
 - [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
       `autonomous` (agent commits everything, you review `_meta/digest.md` and revert).
       Switch to `reviewed` if destructive actions should wait for your approval — see
@@ -391,11 +392,13 @@ Work through this checklist — the instance is ready when every box is checked:
       not wire this machine. It is what writes the per-user `~/.claude/<vault-name>.md`
       that every wired project repo imports.
 - [ ] Wire your project repos: see "Wiring a project repo" in
-      `.claude/skills/kb-search/SKILL.md`. Read its last subsection too — once your
-      instance has workflow documents or team skills of its own, the same wiring commit
-      carries a pointer to those documents, copies of those skills, and whatever
-      platform scaffolding you define; a repo that gets the knowledge block alone has
-      agents that improvise the rest.
+      `.claude/skills/kb-search/SKILL.md`. The block is **fixed-size and stays that
+      way** — it names your vault and says when to open it, and your vault routes
+      everything else, so a repo wired today needs no edit when the vault later grows a
+      rule document, a team skill, or a hundred notes. That is the whole of wiring: no
+      copies of your skills, no pointers naming your rule documents. Publish your
+      filled-in copy of the block as a note in your own vault (`guides/`, tagged with
+      your process domain) so members paste identical text into every repo.
 - [ ] *Optional*: open the vault in Obsidian once to confirm it reads well. Obsidian is a
       human reading UI, nothing more — the vault is fully usable without it.
 - [ ] Grant your teammates write access to the repo — `autonomous` mode needs everyone

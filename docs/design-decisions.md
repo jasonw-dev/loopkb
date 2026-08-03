@@ -98,6 +98,16 @@ its own workflow"). The sync duty copies imply — edit the vault canonical, re-
 wired repo in the same piece of work — is part of the price accepted here; the revisit
 trigger above is unchanged.
 
+*Corrected by D15 (2026-08-03): the three layers are down to one.* Both layers this
+paragraph added are withdrawn — the pointer naming each rule document by path, and the
+skill copies with their sync duty — because both made every wired repo change whenever
+the vault grew, which is the cost this paragraph accepted without noticing its shape.
+The failure recorded above is real and still fixed, by one routing line to
+`<KB_VAULT>/CLAUDE.md` that the vault's own discovery convention takes from there. What
+survives of this decision is the enumerable-users rule that decides who needs a plugin
+manifest; what does not is per-repo copies as the answer for an instance's team skills —
+they now live in the vault alone.
+
 ## D3 — The linter is the schema
 
 **Context.** The lint stage was a prose checklist, so "is this note valid?" depended on
@@ -588,3 +598,45 @@ what is linked: a note contradicting an unlinked stranger passes write time unno
 which is the same limit D13 already accepted and leaves to read time to find. That is also
 a standing argument for adding wikilinks eagerly in refine — links are now what makes
 contradictions findable, not just what makes notes navigable.
+
+## D15 — An entry document states methods, never inventories
+
+**Context.** Two documents had started to grow with the very thing they were supposed to
+govern. Wiring a project repo had become three layers (D2's qualification): the knowledge
+block, a pointer *naming each of the instance's rule documents by path*, and *copies* of
+the instance's skills. Both added layers are inventories, so every wired repo had to be
+edited whenever the vault grew a rule document or a skill — with N repos and a sync duty
+per edit, the wired repos were a hand-maintained, distributed copy of the vault's table
+of contents, and a stale one still reads as authoritative. The same shape appeared one
+level in: an instance's `CLAUDE.md` had begun listing its governing documents, so the
+vault's own entry point grew with its rules. Meanwhile the knowledge half of that same
+entry point had never had the problem — it teaches retrieval (read the taxonomy, grep the
+type folders, rank by status) and has never named a single note, so adding a note edits
+nothing.
+
+**Decision.** Generalize what the knowledge half already did. **An entry document states
+methods and invariants; it never enumerates the things it governs.**
+
+- **Rules are discovered by convention.** A note that governs how work is done is filed
+  in `guides/` and carries the instance's process-style domain tag. An agent starting a
+  piece of work lists them — `grep -l '^domains:.*process' guides/*.md` — and reads the
+  ones that govern it (`CLAUDE.md` → "Finding the rules that govern a piece of work";
+  `_meta/taxonomy.md` says it on the filing side). No entry document names them, so
+  adding a governing note is a plain additive commit and nothing else.
+- **A wired repo carries a fixed five-line block**: the vault URL, the
+  `@~/.claude/<vault-name>.md` import, what to do when it is undefined, and one line
+  saying to read `<KB_VAULT>/CLAUDE.md` before team work in that repo and on
+  build/environment/dependency problems. Anything the block references must be a stable
+  path inside the vault. No skill copies (superseding D2's qualification), no
+  per-document pointers, no growth.
+
+**Consequence.** Adding a rule or a skill to the vault edits nothing outside the vault:
+no wired-repo commit, no entry-document edit, no sync duty, and therefore no drifted copy
+anywhere. A repo wired a year ago routes to a rule written today. The price moves from
+write time to read time — an agent must scan `guides/` frontmatter to find what governs
+its work, one grep plus the filenames it returns, which is the same trade D13 made for
+contradictions: cost scales with reading rather than with size. That scan degrades
+predictably: past a couple of dozen governing documents the list stops being scannable
+and the answer is an index *generated* from the frontmatter, never a hand-kept one. It is
+not needed before then, and building it early would reintroduce exactly the inventory
+this decision removes.

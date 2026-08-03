@@ -23,6 +23,35 @@ for agent behavior. Agents that read `AGENTS.md` instead are pointed here by it.
 | `scripts/` | `lint.py` = executable definition of the schema · `lease.py` = one loop run at a time · `verify_digest.py` = proves the digest itemizes every risky action |
 | `.claude/skills/*/SKILL.md` | Operating procedures for kb-setup / kb-save / kb-search / kb-loop — applies to ALL agents, not just Claude Code |
 
+## Finding the rules that govern a piece of work
+
+The table above is the framework's rules, and it is a fixed set. An instance's own
+governing documents — its workflows, specs, and team conventions — are **discovered by
+convention, never enumerated**: a note that says how work is done is filed in `guides/`
+and carries the instance's process-style domain tag (`process` is the usual value; the
+vocabulary is in `_meta/instance.md`).
+
+So before starting a piece of work, list them and read the ones that govern it:
+
+```bash
+grep -l '^domains:.*process' guides/*.md
+```
+
+Frontmatter is one line per key, so the `^domains:` anchor matches the tag list and not
+the note body; substitute your instance's tag if it is not `process`. Filenames are
+descriptive kebab-case, which is what makes the result scannable — read the ones whose
+names touch the work in front of you.
+
+This convention is why no entry document lists rule documents, here or in a repo wired
+to this vault. Adding a governing note makes it discoverable the moment it is committed,
+with no edit to this file, to `_meta/instance.md`, or to any other repo
+(`docs/design-decisions.md` → D15).
+
+**Its limit, honestly:** scanning works while the governing documents number a couple of
+dozen. Past that the list stops being scannable, and the answer is an index *generated*
+from the frontmatter — never a hand-kept one, which would drift. It is not needed before
+then, and building it earlier reintroduces the inventory this convention exists to avoid.
+
 ## Frontmatter schema
 
 ```yaml

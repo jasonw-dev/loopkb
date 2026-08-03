@@ -71,10 +71,10 @@ The import above loads the per-user KB_VAULT setting. It is normally written by
 kb-setup. If undefined, run kb-setup with the vault URL above, or ask the user for
 their clone path and offer to create ~/.claude/<vault-name>.md with a
 `KB_VAULT: /path` line.
-The kb-save / kb-search / kb-loop procedures are defined in
-`<KB_VAULT>/.claude/skills/<name>/SKILL.md` — read the relevant file before acting.
-On build/environment/dependency problems, search the knowledge base first (kb-search).
-After solving a non-trivial problem worth sharing, save it with kb-save.
+Read `<KB_VAULT>/CLAUDE.md` before doing team work in this repo (creating or editing
+issues or MRs) and when hitting a build, environment, or dependency problem. It is the
+vault's entry point and routes to everything else: the rules that apply here, the
+skills that carry them out, and what the team already knows.
 ```
 
 Substitute `<vault repo URL>` and `<vault-name>` with the real values; leave `<KB_VAULT>`
@@ -101,29 +101,45 @@ line out of it. Say that explicitly in the AGENTS.md copy.
 
 ### What wiring carries when the instance has its own workflow
 
-Everything above is the framework's part — the knowledge layer, identical in every
-instance. An instance that has grown its own rules and skills must ALSO put these into
-each repo it wires; an agent there knows only what that repo's own files tell it.
+**Nothing more.** The block above is complete as it stands, and it must never grow: it
+names the vault and gives the agent a reason to open it. Everything else — which rules
+apply, which skills carry them out, what the team already knows — is the VAULT's job to
+route, not the wired repo's job to enumerate.
 
-1. **A pointer to the instance's workflow/spec documents.** One or two sentences in the
-   same committed CLAUDE.md (and its AGENTS.md variant) telling agents to read those
-   vault documents *before* acting in the domain they govern — e.g. before creating or
-   editing an issue or MR, when the instance defines an issue workflow. **Name each
-   document by its path** under `<KB_VAULT>/`: agents do not go looking for rules nobody
-   told them exist, so "the vault has a workflow" is a pointer they cannot follow.
-2. **Copies of the instance's own skills.** The thin-pointer `SKILL.md` files under the
-   repo's `.claude/skills/<name>/`, byte-identical to the vault canonicals apart from a
-   header comment saying this is a copy and naming the canonical path. The vault keeps
-   the canonical: edit it there, then re-sync every wired repo in the same piece of
-   work — a drifted copy is worse than a missing one, since it still reads as
-   authoritative. Copies rather than a plugin because the users are enumerable (the
-   handful of repos the instance wires), which is the split `docs/design-decisions.md`
-   → D2 draws.
-3. **Platform-specific scaffolding the instance defines** — issue/MR templates in
-   whatever location the host platform reads them from, say. These are instance- and
-   platform-specific, so the framework says only this: if your instance defines them,
-   wiring carries them.
+This supersedes the earlier three-layer prescription (a pointer naming each of the
+instance's rule documents by path, copies of the instance's skills in every wired repo,
+platform scaffolding). Naming documents and copying skills makes every wired repo change
+whenever the vault grows, which is precisely what a wired repo must not do
+(`docs/design-decisions.md` → D15).
 
-All of it is one commit per repo, and the same list is the checklist for the NEXT repo
-the instance wires. The failure it prevents has already happened: a repo that received
-the knowledge block alone, whose agents then improvised the workflow the vault defined.
+- **One line replaces the per-document pointers.** "Read `<KB_VAULT>/CLAUDE.md` before
+  doing team work in this repo (creating or editing issues or MRs) and when hitting a
+  build/environment/dependency problem" is the whole routing instruction, and it is
+  already in the block. The vault's entry point takes it from there: it states the
+  discovery convention for the instance's governing documents (`CLAUDE.md` → "Finding
+  the rules that govern a piece of work"), so a rule document added to the vault today
+  is found by an agent in a repo wired a year ago, with no commit in that repo.
+- **No copies of the instance's skills in wired repos.** This supersedes the previous
+  instruction to sync thin `SKILL.md` copies into every repo. The copies bought
+  discoverability at the price of a sync duty per edit, per repo — and a drifted copy is
+  worse than a missing one, since it still reads as authoritative. The vault's entry
+  point buys the same discoverability with one line that never changes.
+- **Platform scaffolding stays optional and instance-specific.** If your instance
+  defines issue/MR templates and humans hand-create issues, wiring may carry them, in
+  whatever location the host platform reads them from. The framework neither ships them
+  nor asks for them.
+
+**The design rule, stated so it can be checked:** anything the block references must be
+a STABLE path inside the vault — `<KB_VAULT>/CLAUDE.md`, and nothing that grows. The
+block may not enumerate. An entry document states methods and invariants, never
+inventories: the knowledge half of this skill has always worked that way (it teaches
+retrieval and has never listed a note), and the rule half now works the same way.
+
+The failure the old prescription was written for is real and unchanged — a repo that
+received the knowledge block alone, whose agents then improvised the workflow the vault
+defined. It is fixed by the routing line, not by copying the workflow into the repo.
+
+An instance should **publish its filled-in block** as a note in its own vault, so
+members paste identical text into every repo instead of re-deriving it — a short
+`guides/` note tagged with the instance's process domain, which makes it discoverable by
+the same convention as every other rule.
