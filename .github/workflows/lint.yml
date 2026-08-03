@@ -12,6 +12,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# scripts/verify_digest.py is deliberately NOT run here: it checks that the latest
+# run's digest itemizes every risky action, and a loop run legitimately pushes work
+# to main before writing the digest — CI would fail mid-run. It is a pre-report-commit
+# check for the loop and a post-merge check for humans (GETTING-STARTED.md), not a CI gate.
+
 jobs:
   vault:
     runs-on: ubuntu-latest

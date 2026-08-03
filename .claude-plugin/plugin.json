@@ -3,7 +3,7 @@
   "name": "loopkb",
   "displayName": "loopkb",
   "description": "Knowledge-base skills for a loopkb vault: kb-setup (join a vault in one command), kb-save, kb-search, kb-loop.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "jasonw-dev",
     "url": "https://github.com/jasonw-dev"
