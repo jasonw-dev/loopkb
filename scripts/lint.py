@@ -9,7 +9,7 @@ Every violation is printed as one `path: problem` line, relative to the vault ro
 
 Scope: the type folders only (one folder per template in `_meta/templates/`), at
 any depth inside them. `_meta/`, `_inbox/`, `_attachments/`, `.obsidian/`,
-`integrations/` and other framework directories are never schema-checked — by
+`.claude/` and other framework directories are never schema-checked — by
 their name at the TOP level only, so `guides/scripts/note.md` is a note like any
 other; `_inbox/` still participates in
 the basename index so wikilink resolution and uniqueness see the whole vault —
@@ -35,6 +35,11 @@ REQUIRED_KEYS = ("type", "domains", "created", "source", "status")
 # is an ordinary subfolder of notes, and skipping it at any depth would make those notes
 # invisible — unlinted, missing from the basename index, and every wikilink into them
 # reported as dangling from the other side.
+#
+# `.agents` is here although the framework itself no longer ships one: an instance may
+# carry team skills of its own in `.agents/skills/<name>/SKILL.md`, and dropping the skip
+# would start linting those pointer files as notes — collided basenames against their
+# `.claude/skills/` twins included. The skip costs nothing when the directory is absent.
 SKIP_DIRS = {
     ".git",
     ".github",
@@ -45,7 +50,6 @@ SKIP_DIRS = {
     "_meta",
     "_attachments",
     "docs",
-    "integrations",
     "scripts",
     "tests",
 }
