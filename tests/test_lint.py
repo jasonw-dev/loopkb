@@ -259,6 +259,9 @@ class LintTest(TempDirTestCase):
         # that would collide in the index, and none of them is a note.
         for agent in ("codex", "other"):
             write(self.vault / "integrations" / agent / "kb-search" / "SKILL.md", "# pointer\n")
+        # .claude/skills/ and its .agents/skills/ twin are procedures, not notes, either.
+        for skills_dir in (".claude", ".agents"):
+            write(self.vault / skills_dir / "skills" / "kb-search" / "SKILL.md", "# pointer\n")
         write(self.vault / "docs" / "design-decisions.md", "# ADRs\n")
         code, out = self.lint()
         self.assertEqual(code, 0, out)

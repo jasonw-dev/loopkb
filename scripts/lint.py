@@ -35,6 +35,7 @@ SKIP_DIRS = {
     ".obsidian",
     ".claude",
     ".claude-plugin",
+    ".agents",
     "_meta",
     "_attachments",
     "docs",
