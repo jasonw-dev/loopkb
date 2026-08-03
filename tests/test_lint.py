@@ -268,6 +268,32 @@ class LintTest(TempDirTestCase):
         self.assertNotIn("warning", out)
         self.assertNotIn("SKILL", out)
 
+    def test_a_note_nested_under_a_type_folder_is_still_linted(self) -> None:
+        # The framework directory names are skipped at the top level only. A note in
+        # `guides/scripts/` is a note: skipping it at any depth made it invisible —
+        # unlinted, absent from the basename index, and dangling from every link to it.
+        write(
+            self.vault / "guides" / "scripts" / "nested-note.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: golden\n---\n# Nested\n",
+        )
+        self.assert_violation("guides/scripts/nested-note.md: status 'golden' is not one of")
+
+    def test_a_nested_note_joins_the_basename_index(self) -> None:
+        write(
+            self.vault / "guides" / "docs" / "nested-target.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Target\n",
+        )
+        write(
+            self.vault / "guides" / "pointer-note.md",
+            "---\ntype: guides\ndomains: [ci-cd]\ncreated: 2026-08-01\n"
+            "source: inbox\nstatus: raw\n---\n# Pointer\n\n[[nested-target]]\n",
+        )
+        code, out = self.lint()
+        self.assertEqual(code, 0, out)
+        self.assertIn("4 note(s) checked", out)
+
     def test_inbox_notes_are_never_warned_about(self) -> None:
         write(self.vault / "_inbox" / "rough-idea.md", "some unclassified text\n")
         code, out = self.lint()

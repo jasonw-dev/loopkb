@@ -7,9 +7,11 @@ Usage:
 Exit code 0 when the vault is clean, 1 when it has violations.
 Every violation is printed as one `path: problem` line, relative to the vault root.
 
-Scope: the type folders only (one folder per template in `_meta/templates/`).
-`_meta/`, `_inbox/`, `_attachments/`, `.obsidian/`, `integrations/` and other
-framework directories are never schema-checked; `_inbox/` still participates in
+Scope: the type folders only (one folder per template in `_meta/templates/`), at
+any depth inside them. `_meta/`, `_inbox/`, `_attachments/`, `.obsidian/`,
+`integrations/` and other framework directories are never schema-checked — by
+their name at the TOP level only, so `guides/scripts/note.md` is a note like any
+other; `_inbox/` still participates in
 the basename index so wikilink resolution and uniqueness see the whole vault —
 though a basename an inbox drop shares with a filed note is only a warning.
 
@@ -28,7 +30,11 @@ STATUSES = ("raw", "curated", "evergreen")
 SOURCES = ("inbox", "conversation", "meeting")
 REQUIRED_KEYS = ("type", "domains", "created", "source", "status")
 
-# Directories that are never part of the note namespace.
+# Top-level directories that are never part of the note namespace. Matched against the
+# FIRST path component only: a folder named `scripts/` or `docs/` *inside* a type folder
+# is an ordinary subfolder of notes, and skipping it at any depth would make those notes
+# invisible — unlinted, missing from the basename index, and every wikilink into them
+# reported as dangling from the other side.
 SKIP_DIRS = {
     ".git",
     ".github",
@@ -238,7 +244,7 @@ def collect_notes(vault: Path) -> list[Path]:
         rel = path.relative_to(vault)
         if len(rel.parts) < 2:
             continue  # top-level framework docs are not notes
-        if any(part in SKIP_DIRS for part in rel.parts[:-1]):
+        if rel.parts[0] in SKIP_DIRS:
             continue
         notes.append(path)
     return notes
