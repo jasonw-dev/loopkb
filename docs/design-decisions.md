@@ -247,6 +247,16 @@ became read-only for agents. And the digest is confirmed as **display**, not sta
 rejection memory it lists is re-derived each run, so this decision's one artefact carries
 no information the loop depends on.
 
+*Narrowed again: `reviewed` requires merge commits too.* D10's verifier skips merge
+commits because in this mode a merge *is* the human review — which silently made the
+platform's merge method a prerequisite of the mode. Squash- and rebase-merge put a
+single-parent `[kb-loop]` commit on `main`'s first-parent chain, indistinguishable from
+one that bypassed the MR channel, so the verifier reports approved work as missing from
+the digest. Stated as a prerequisite wherever the mode is chosen rather than detected:
+separating a squashed MR from a direct commit is guesswork, and guessing would blunt the
+tripwire. Instances that cannot change the merge method itemize squashed MRs like direct
+commits.
+
 *Narrowed in passing.* `reviewed` mode now requires an MR platform; the documented
 fallback (branch + local `git diff main...` review + merge, for a repo without one) is
 cut. The team it served — wanting pre-approval, owning no MR platform — is the empty set

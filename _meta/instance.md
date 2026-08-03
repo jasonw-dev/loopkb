@@ -43,7 +43,9 @@ stage-by-stage effects in `_meta/loop.md`.
   `main`, destructive actions included, and itemize each risky one in
   `_meta/digest.md`; you review afterwards and `git revert` what you disagree with.
 - `reviewed` — destructive actions and `_meta/` rule changes wait for you in a merge
-  request; nothing lands on `main` until you approve it.
+  request; nothing lands on `main` until you approve it. It has two prerequisites: an MR
+  platform (name it under "Policy overrides" below) and a merge method set to "merge
+  commit" — `CLAUDE.md` → "Governance modes" says why both are required.
 
 `curated → evergreen` stays human-conferred in both modes.
 

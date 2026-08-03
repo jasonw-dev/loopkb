@@ -168,6 +168,15 @@ lists the open MRs; you approve or close them. Closing one without merging is th
 rejection signal, exactly as a revert is in `autonomous` mode. Additive work (filing,
 links, tags, `raw → curated`) still commits directly in this mode too.
 
+Two prerequisites before you pick it. It needs an **MR platform** (`gh`, `glab`, or the
+platform's API — name it in `_meta/instance.md` → Policy overrides); with none, run
+`autonomous`, which is the mode built for that case. And your project's **merge method
+must be "merge commit"**: `scripts/verify_digest.py` reads a merge as the human review and
+skips it, so an MR landed by squash or rebase arrives as a single commit it cannot tell
+from one that skipped review — and your approved work is reported as missing from the
+digest, on a run where you did everything right. If you cannot change the merge method,
+every squashed MR has to be itemized in the digest exactly like a direct commit.
+
 Pick `reviewed` when you do not yet trust the agent with your vault, and switch to
 `autonomous` once you find yourself approving everything unread.
 
@@ -326,7 +335,8 @@ Work through this checklist — the instance is ready when every box is checked:
 - [ ] Choose the governance mode in `_meta/instance.md` → Governance. Default:
       `autonomous` (agent commits everything, you review `_meta/digest.md` and revert).
       Switch to `reviewed` if destructive actions should wait for your approval — see
-      "Reviewing the loop's work" above.
+      "Reviewing the loop's work" above, including its two prerequisites: an MR platform,
+      and a merge method set to "merge commit".
 - [ ] The domain vocabulary must be non-empty: it is the machine-checkable definition
       of "setup complete". While it is empty, `kb-loop` refuses to run and agents may
       still edit `_meta/` directly and unreported; once it is filled, `_meta/` changes

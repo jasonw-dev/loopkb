@@ -102,6 +102,14 @@ name it in `_meta/instance.md` → Policy overrides. There is no platform-less v
 it: a vault with no MR platform runs `autonomous`, which is the mode built for exactly
 that case and asks nothing of a platform at any point.
 
+**It also requires that MRs land as merge commits.** `scripts/verify_digest.py` skips
+merge commits because in this mode a merge *is* the human review; squash- and rebase-merge
+flatten an approved MR into a single-parent `[kb-loop]` commit that the script cannot tell
+from one which bypassed review, and it then reports human-approved work as missing from
+the digest. Set the project's merge method to "merge commit" before choosing `reviewed`,
+or itemize every squashed MR in the digest exactly like a direct commit
+(`_meta/loop.md` → MR mechanics).
+
 ## The run digest
 
 Every loop run writes its report to **`_meta/digest.md`**, overwriting the previous
