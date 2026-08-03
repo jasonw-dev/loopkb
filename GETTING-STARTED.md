@@ -32,7 +32,9 @@ the manual path below and reads the same files.
 ### Claude Code
 
 You never run `git clone` yourself: the plugin machinery fetches the skills, and
-`kb-setup` clones the vault for you. Install the plugin and say one sentence:
+`kb-setup` clones the vault for you. The plugin is named `loopkb` after the framework
+this vault is built on, not after the vault — one install serves every vault you ever
+join. Install it and say one sentence:
 
 ```
 /plugin marketplace add jasonw-dev/loopkb

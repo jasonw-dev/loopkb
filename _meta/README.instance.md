@@ -17,7 +17,11 @@ and maintains them; git is the sync, review and undo layer.">
 Install the Claude Code plugin, then say one sentence — `kb-setup <vault URL>` — and
 it clones the vault, validates it, and wires this machine. Nothing else to do.
 
-**Claude Code** — install the plugin (you never `git clone` anything yourself):
+**Claude Code** — install the plugin (you never `git clone` anything yourself). The
+plugin carries the framework's name, not this vault's: <Vault name> is built on
+[loopkb](https://github.com/jasonw-dev/loopkb), an open-source knowledge-base framework,
+and its plugin is what gives you the shared `kb-*` commands — `kb-setup`, `kb-save`,
+`kb-search`, `kb-loop`.
 
 ```
 /plugin marketplace add jasonw-dev/loopkb
