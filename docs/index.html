@@ -219,9 +219,12 @@ footer a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-o
 /plugin install loopkb@loopkb</pre>
       <b>其他 agent</b> — 框架不提供現成入口，走 GETTING-STARTED 的手動路徑（AGENTS.md 為入口，程序直接讀 vault 的 SKILL.md）。</div></div></div>
     <div class="step-row"><div><b>加入 vault（每人每台機器一次）</b>
-      <div class="d">對你的 agent 說一句，把網址換成步驟 1 產生的 repo 網址：
+      <div class="d"><b>Claude Code</b> — 對 agent 說一句，把網址換成步驟 1 產生的 repo 網址：
       <pre>kb-setup https://gitlab.example.com/team/team-kb.git</pre>
-      它會自動 clone、驗證、設定好這台機器。</div></div></div>
+      它會自動 clone、驗證、設定好這台機器。<br>
+      <b>其他 agent</b> — 沒有現成的 kb-setup 可以說：照 GETTING-STARTED 的手動四步驟自己
+      <code>git clone</code>，再把 <code>KB_VAULT: &lt;路徑&gt;</code> 一行寫進
+      <code>~/.claude/&lt;vault-name&gt;.md</code>。終點與上面完全相同。</div></div></div>
     <div class="step-row"><div><b>（選配）同一台機器用多個 vault</b>
       <div class="d">同一台機器可以同時用多個 vault（公司知識庫 + 個人第二大腦）：
       入口只裝一次，每個 vault 各說一次 kb-setup 即可，互不干擾

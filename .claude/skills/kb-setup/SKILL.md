@@ -12,8 +12,9 @@ Make this machine ready to use a loopkb vault. One pass, no retry loops.
 If the current repo contains `_meta/loop.md`, it **is** a loopkb vault: there is no URL
 to ask for and nothing to clone. Take `<dest>` = this repo's root and skip straight to
 step 5 (Validate) — steps 1–4 are for joining a vault from outside. Opening a vault clone
-and saying `kb-setup` is the common way to land here, and every vault carries the entry
-points that route to this file, so expect this branch often.
+and saying `kb-setup` is the common way to land here: this file ships *inside* every vault
+at `.claude/skills/kb-setup/SKILL.md`, so it is live in a vault clone with no plugin
+installed at all. Expect this branch often.
 
 Derive `<vault-name>` from the repo rather than from a URL:
 
