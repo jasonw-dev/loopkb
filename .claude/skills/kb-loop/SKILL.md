@@ -96,9 +96,12 @@ is merged or closed (`git push origin --delete <branch>`; `git branch -D <branch
    On conflict: rebase and retry; if the conflict cannot be resolved,
    abort, keep the work on a local branch, and tell the user sync is pending.
    Never force-push main (see CLAUDE.md guardrails for the `kb-loop/*` branch rule).
-5. **Release the lease**: `python3 scripts/lease.py release`. Do this on every exit
-   path, including aborts and errors — a lease left behind blocks the next run for
-   two hours.
+5. **Release the lease**: `python3 scripts/lease.py release`. Do this on every exit path
+   after a *successful* acquire, aborts and errors included — a lease left behind blocks
+   the next run for two hours. If pre-flight step 5 failed, do NOT release: that lock is
+   the other run's, and `release` refuses it (exit 1) for exactly that reason. A release
+   that exits 1 for any reason — someone else's live lock, or an unreachable `origin` —
+   means the lease is still held; report it rather than treating the run as clean.
 6. Tell the user: what was processed; the risky actions they may want to revert
    (`autonomous`) or the MRs awaiting review (`reviewed`); evergreen nominations;
    items stuck in inbox and what context they need; and the final `scripts/lint.py`

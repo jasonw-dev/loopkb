@@ -34,13 +34,18 @@ storms, and two digests that each describe half a run. This holds in both modes.
 ```
 python3 scripts/lease.py acquire      # exit 1 = someone else is running; stop
 ...the run...
-python3 scripts/lease.py release      # also on every abort path
+python3 scripts/lease.py release      # on every exit path AFTER a successful acquire
 ```
 
 The lease is an orphan branch `kb-loop-lock` on `origin` recording holder and
 acquisition time. A lock older than 2 hours is stale and may be replaced. With no
 remote (solo vault) it degrades to a local ref with the same semantics. A run that
-aborts for any reason releases the lease before reporting.
+aborts for any reason releases the lease before reporting — provided it acquired one.
+After a *failed* acquire there is nothing to release: the lock belongs to the run that
+won the race, and `release` refuses to delete it (exit 1) until it goes stale, so the
+loser cannot end the winner's exclusivity. `--force` exists for a run known to be dead
+before its TTL. A release that cannot reach `origin` also exits 1 and says so: the local
+ref is gone, but every other clone sees the lock until the TTL expires.
 
 ## Stage 1 — Triage (empty the inbox)
 

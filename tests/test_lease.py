@@ -179,6 +179,70 @@ class LeaseTest(TempDirTestCase):
         self.assertEqual(proc.returncode, 0, proc.output)
         self.assertIn("was not held", proc.output)
 
+    def test_release_refuses_a_lock_held_by_someone_else(self) -> None:
+        """The abort path of a losing acquire must not delete the winner's lock."""
+        self.lease(self.alpha, "acquire")
+        held = self.remote_lock()
+
+        blocked = self.lease(self.beta, "acquire", holder="holder-b", session="session-2")
+        self.assertEqual(blocked.returncode, 1, blocked.output)
+
+        proc = self.lease(self.beta, "release", holder="holder-b", session="session-2")
+        self.assertEqual(proc.returncode, 1, proc.output)
+        self.assertIn("refusing to release", proc.output)
+        self.assertIn("held by holder-a", proc.output)
+        self.assertEqual(self.remote_lock(), held, "a refused release must not move the lock")
+
+        still = self.lease(self.beta, "status", holder="holder-b", session="session-2")
+        self.assertIn("held by holder-a", still.output)
+
+    def test_release_refuses_another_session_of_the_same_holder(self) -> None:
+        """Two terminals on one machine share a holder name — still two runs."""
+        self.lease(self.alpha, "acquire", session="session-1")
+        held = self.remote_lock()
+
+        proc = self.lease(self.beta, "release", session="session-2")
+        self.assertEqual(proc.returncode, 1, proc.output)
+        self.assertIn("in another session", proc.output)
+        self.assertEqual(self.remote_lock(), held)
+
+    def test_forced_release_clears_someone_elses_lock(self) -> None:
+        """The escape hatch for a run that is dead before its TTL."""
+        self.lease(self.alpha, "acquire")
+        self.assertTrue(self.remote_lock())
+
+        proc = self.lease(self.beta, "release", "--force", holder="holder-b", session="session-2")
+        self.assertEqual(proc.returncode, 0, proc.output)
+        self.assertIn("released", proc.output)
+        self.assertEqual(self.remote_lock(), "")
+
+    def test_release_of_a_stale_lock_needs_no_force(self) -> None:
+        self.lease(self.alpha, "acquire")
+        proc = self.lease(
+            self.beta, "release", "--ttl-hours", "0", holder="holder-b", session="session-2"
+        )
+        self.assertEqual(proc.returncode, 0, proc.output)
+        self.assertEqual(self.remote_lock(), "")
+
+    def test_release_says_so_when_origin_is_unreachable(self) -> None:
+        """The remote lock outlives an offline release; saying "released" would lie."""
+        self.lease(self.alpha, "acquire")
+        held = self.remote_lock()
+        self.git(self.alpha, "remote", "set-url", "origin", str(self.tmp / "gone.git"))
+
+        proc = self.lease(self.alpha, "release")
+        self.assertEqual(proc.returncode, 1, proc.output)
+        self.assertIn("local lock ref is gone", proc.output)
+        self.assertIn("NOT released", proc.output)
+        self.assertEqual(self.remote_lock(), held, "the remote lock must survive")
+        self.assertEqual(
+            self.git(
+                self.alpha, "rev-parse", "--verify", "--quiet", "refs/heads/kb-loop-lock", check=False
+            ).strip(),
+            "",
+            "the local ref is dropped — which is exactly what makes the report necessary",
+        )
+
     def test_release_frees_the_lock_for_another_holder(self) -> None:
         self.lease(self.alpha, "acquire")
         self.lease(self.alpha, "release")

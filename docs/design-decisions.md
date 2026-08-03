@@ -125,6 +125,14 @@ including aborts. With no remote, the lock is local with identical semantics.
 service, no state file to reconcile. A crashed run blocks the next for at most the TTL,
 which is the price of not having a heartbeat.
 
+*Amended: "releases on every exit path" means after a successful acquire.* Read literally
+it defeated the decision — a run whose acquire was *rejected* would, on its way out,
+delete the lock of the run that had just won it. `release` now refuses a live lock whose
+holder or session is not its own (exit 1, `--force` for a run known to be dead), and a
+release that cannot reach `origin` reports that the local ref is gone while the remote
+lock stands until the TTL, instead of printing "released". Mutual exclusion is a property
+of the exit path too, not only of the entry.
+
 ## D6 — Evergreen is human-conferred
 
 **Context.** `evergreen` is the top of the trust ladder that both humans and agents read

@@ -3,7 +3,7 @@
 
 Usage:
     python3 scripts/lease.py acquire [--holder NAME] [--ttl-hours 2]
-    python3 scripts/lease.py release
+    python3 scripts/lease.py release [--holder NAME] [--ttl-hours 2] [--force]
     python3 scripts/lease.py status  [--ttl-hours 2]
 
 Mechanism: an orphan branch `kb-loop-lock` holding a single empty commit whose
@@ -12,6 +12,18 @@ The branch is pushed to `origin`, so every clone sees the same lock. `acquire`
 fails when the lock exists and is younger than the TTL (default 2 hours); an
 older lock is considered stale and is replaced. `release` deletes the branch
 locally and on the remote.
+
+`release` only releases a lock this run holds. A lock recording another holder,
+or another session of the same holder, is refused (exit 1) while it is younger
+than the TTL — otherwise the documented "release on every exit path" would turn a
+*failed* acquire into a lock theft: the run that lost the race would delete the
+lock of the run that won it, and two loop runs would proceed at once. `--force`
+is the escape hatch for a run that is genuinely dead before its TTL. An expired
+lock needs no force: it is already stale and replaceable.
+
+A release that cannot reach `origin` says so and exits 1. It drops the local ref
+but the remote lock stands until the TTL, so reporting success there would tell
+one clone the lease is free while every other clone still sees it held.
 
 Compare-and-swap, not check-then-write. Reading the lock and then publishing one
 is two steps, so the publish itself has to be the atomic test:
@@ -259,7 +271,8 @@ def cmd_acquire(args: argparse.Namespace) -> int:
                 f"lease: held by {info['holder']}{where} since {info['acquired']} ({minutes}m ago) — "
                 f"not stale until {args.ttl_hours}h. Another loop run is in progress; stop here."
                 + (
-                    " If that run is dead, clear it with `python3 scripts/lease.py release`."
+                    " If that run is dead, clear it with "
+                    "`python3 scripts/lease.py release --force`."
                     if same_identity
                     else ""
                 ),
@@ -277,15 +290,51 @@ def cmd_acquire(args: argparse.Namespace) -> int:
 
 
 def cmd_release(args: argparse.Namespace) -> int:
+    holder = args.holder or default_holder()
+    session = default_session()
     sha = fetch_lock()
+    if not sha:
+        print("lease: was not held — nothing to release")
+        return 0
+
+    info = lock_info(sha)
+    held_for = age(info)
+    # A missing session means a lock from an older version: holder alone decides.
+    ours = info["holder"] == holder and info["session"] in ("", session)
+    live = held_for is not None and held_for < timedelta(hours=args.ttl_hours)
+    if not ours and live and not args.force:
+        where = " in another session" if info["holder"] == holder else ""
+        print(
+            f"lease: refusing to release — the lock is held by {info['holder']}{where} since "
+            f"{info['acquired']}, not by this run ({holder}). Deleting it would let a second "
+            f"loop run start while that one is still working. It goes stale on its own after "
+            f"{args.ttl_hours}h; pass --force only if you know that run is dead.",
+            file=sys.stderr,
+        )
+        return 1
+
+    remote_error = ""
     if has_remote():
-        subprocess.run(
+        proc = subprocess.run(
             ["git", "push", "origin", "--delete", LOCK_NAME],
             capture_output=True,
             text=True,
         )
+        if proc.returncode != 0:
+            remote_error = (proc.stderr.strip() or proc.stdout.strip() or "unknown error")
     drop_local_lock()
-    print("lease: released" if sha else "lease: was not held — nothing to release")
+
+    if remote_error:
+        print(
+            f"lease: the local lock ref is gone, but deleting it on origin failed: "
+            f"{remote_error}. The lease is NOT released — every other clone still sees it "
+            f"held by {info['holder']} until it goes stale ({args.ttl_hours}h after "
+            f"{info['acquired']}). Rerun `release` once origin is reachable.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print("lease: released")
     return 0
 
 
@@ -313,7 +362,14 @@ def main(argv: list[str]) -> int:
     acquire.add_argument("--ttl-hours", type=float, default=2.0, help="age after which a lock is stale")
     acquire.set_defaults(func=cmd_acquire)
 
-    release = subparsers.add_parser("release", help="drop the lease")
+    release = subparsers.add_parser("release", help="drop the lease this run holds")
+    release.add_argument("--holder", help="identity to match against the lock (default: as acquire)")
+    release.add_argument("--ttl-hours", type=float, default=2.0, help="age after which a lock is stale")
+    release.add_argument(
+        "--force",
+        action="store_true",
+        help="release a live lock held by someone else — only for a run known to be dead",
+    )
     release.set_defaults(func=cmd_release)
 
     status = subparsers.add_parser("status", help="report who holds the lease")
