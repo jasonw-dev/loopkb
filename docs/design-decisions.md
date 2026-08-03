@@ -144,6 +144,14 @@ modes — this is the one rule `autonomous` mode does not relax. Only the nomina
 channel differs: an MR in `reviewed` mode, a digest line in `autonomous`, which the
 human promotes by direct commit or lets lapse.
 
+*Amended: demotion is risky-tier, not additive-tier.* "Demotion stays additive-tier for
+both" described the tiers as they were when this was written. It no longer holds: a
+demotion carries a digest "Risky actions" line in `autonomous` mode, and it is one of the
+four classes `scripts/verify_digest.py` re-derives straight from git (D10). The *channel*
+is what stayed additive — a direct commit in both modes, reason in the commit message,
+never an MR — but the action is itemized, so the human sees every note the loop pushed
+back down the ladder.
+
 ## D7 — Freshness is checked, not assumed
 
 **Context.** Promotion is one-directional in practice: notes climb to `curated` or

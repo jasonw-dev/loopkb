@@ -5,7 +5,7 @@
 
 This file is **owned by the instance**. Framework files (`CLAUDE.md`,
 `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`, `.claude/skills/`,
-`scripts/`) never carry instance-specific content, so pulling template updates
+`.agents/skills/`, `scripts/`) never carry instance-specific content, so pulling template updates
 (`git merge upstream/main`) leaves what you configure here alone — including the
 classification rules the loop learns from your corrections, which land in this file
 too (see "Classification rule amendments" below). One exception,

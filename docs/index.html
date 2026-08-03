@@ -220,7 +220,7 @@ footer a:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-o
       <b>Codex CLI</b> — vault 內不用裝：每個 vault 都帶著 <code>.agents/skills/</code>，Codex 自動載入（要在別的 repo 也能用，才選擇性複製到 <code>~/.agents/skills/</code>）。<br>
       <b>其他 agent</b> — 走 GETTING-STARTED 的手動路徑（AGENTS.md 為入口）。</div></div></div>
     <div class="step-row"><div><b>加入 vault（每人每台機器一次）</b>
-      <div class="d">對 Claude Code 說一句，把網址換成步驟 1 產生的 repo 網址：
+      <div class="d">對你的 agent 說一句，把網址換成步驟 1 產生的 repo 網址（Claude Code 說 <code>kb-setup …</code>，Codex CLI 說 <code>$kb-setup …</code>）：
       <pre>kb-setup https://gitlab.example.com/team/team-kb.git</pre>
       它會自動 clone、驗證、設定好這台機器。</div></div></div>
     <div class="step-row"><div><b>（選配）同一台機器用多個 vault</b>

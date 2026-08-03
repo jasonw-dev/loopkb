@@ -147,8 +147,9 @@ plugin still has everything it needs.
 lines — resolve the vault (step 0: this repo, if it has `_meta/loop.md`), then read
 `<KB_VAULT>/.claude/skills/<name>/SKILL.md` and follow it — so the vault's SKILL.md files
 remain the one definition of every procedure, exactly as the plugin arrangement keeps
-them. Copying those four into `~/.agents/skills/` is optional and only buys you the kb
-skills in repos that carry no copies. That, the optional global `AGENTS.md` snippet, and
+them. Copying those four into `~/.agents/skills/` is optional and buys two things: the kb
+skills in repos that carry no copies, and a way to run `$kb-setup <vault repo URL>` when
+you have no clone to copy from yet. That, the optional global `AGENTS.md` snippet, and
 the sandbox/approval notes (Codex denies network by default, which every git operation
 here needs) are in [`integrations/codex/README.md`](integrations/codex/README.md).
 

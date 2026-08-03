@@ -17,8 +17,10 @@ editing a procedure in `.agents/skills/`, it belongs in `.claude/skills/` instea
 ## Optional: install them globally
 
 Codex also loads skills from `$HOME/.agents/skills`, which applies in *every* repo. That
-is worth doing for exactly one reason: using `kb-search` and `kb-save` while you work in
-repos that carry no copies of these files. Copy them out of any vault clone:
+is worth doing for two reasons: using `kb-search` and `kb-save` while you work in repos
+that carry no copies of these files, and **bootstrapping** — `$kb-setup <vault URL>` has
+to come from somewhere, and before your first clone there is no vault to load it from.
+Copy them out of any vault clone:
 
 ```bash
 mkdir -p ~/.agents/skills

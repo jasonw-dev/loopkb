@@ -61,8 +61,9 @@ the four framework copies once into `~/.agents/skills/` (see below) and say:
 $kb-setup https://github.com/<org>/<vault-repo>.git
 ```
 
-**The global copy is optional** — its only purpose is having `kb-search` and `kb-save`
-while you work in repos that carry no copies of these files:
+**The global copy is optional** — two things need it: `kb-search` and `kb-save` while you
+work in repos that carry no copies of these files, and the bootstrap above, when you have
+no clone to copy from yet:
 
 ```bash
 mkdir -p ~/.agents/skills
@@ -471,8 +472,9 @@ git checkout --ours README.md && git add README.md
 ```
 
 Everything else (CLAUDE.md, `_meta/taxonomy.md`, `_meta/loop.md`, `_meta/templates/`,
-`.claude/skills/`, `scripts/`) is framework-owned and stays conflict-free from the second
-merge onward. If you edited one of those files locally, the merge will conflict there —
+`.claude/skills/`, `.agents/skills/`, `scripts/`) is framework-owned and stays
+conflict-free from the second merge onward. If you edited one of those files locally,
+the merge will conflict there —
 that is the signal to move the customization into `_meta/instance.md` as a policy
 override instead.
 

@@ -111,7 +111,7 @@ Pick notes: all `raw` before any `curated`; within a status, oldest frontmatter
   `autonomous` mode there is nothing pending by construction: work either landed on
   `main` or was reverted.
 - **Reconcile contradictions on sight.** The tag/keyword search above (and any
-  contradiction report triage filed out of `_inbox/` — kb-search writes them) will surface
+  contradiction report triage handed over from `_inbox/` — kb-search writes them) will surface
   notes that make *conflicting* claims, not just related ones. Resolve them in this run
   rather than deferring: merge the pair, or correct the wrong note, through the normal
   channels for those actions (risky → itemized in the digest as usual). This is the only
