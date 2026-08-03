@@ -62,6 +62,11 @@ from "the skills work anywhere" into "installing the plugin is the whole onboard
 decision, not the plugin format: `integrations/` gives other agents their own thin entry
 points that resolve to the same `.claude/skills/` files.
 
+*That extension is gone (2026-08-03, see D11's reversal).* The plugin is again the only
+packaging the framework ships, so this decision stands alone rather than as one instance
+of a pattern — "one copy, no drift" is now a property of the manifest pointing at
+`.claude/skills/`, and nothing else points at those files.
+
 ## D3 — The linter is the schema
 
 **Context.** The lint stage was a prose checklist, so "is this note valid?" depended on
@@ -384,6 +389,24 @@ install and no second copy of the procedure. The price is that `.agents` joins t
 linter's non-note directories for the same reason `integrations/` did, and that a repo
 carrying copies can hold a stale pointer — bounded, since a pointer only ever names a
 path.
+
+*Reversed (2026-08-03): the Codex packaging is removed.* `.agents/skills/kb-*` and the
+whole of `integrations/` are deleted; the framework ships entry points for Claude Code
+only. The rationale is upkeep, not a change of mind about the design: maintaining a second
+ecosystem's entry points — four pointer files, an explanation README, and a per-platform
+onboarding path in every shipped document, all of which had to be re-verified whenever a
+vendor moved its conventions (this decision's own body records one such move) — was not
+carrying its weight against the use it saw. What this decision got right survives without
+the packaging: the rules stay agent-agnostic (`AGENTS.md` → `CLAUDE.md`, `_meta/*.md`,
+`scripts/`), there is still exactly one copy of every procedure in `.claude/skills/`, and a
+non-Claude agent reaches it the way this decision's own "any other agent" path always
+did — told to read the SKILL.md it needs. What is lost is honestly stated rather than
+papered over: that path is documentation, not ergonomics, so a Codex user gets no
+`$kb-setup`, and re-adding a platform means re-adding a directory of pointers. Two
+residues are deliberate: `.agents` stays in `scripts/lint.py`'s SKIP_DIRS, because an
+instance may still carry team skills of its own there and a template merge must not start
+linting them as notes; and the instance-side pattern this decision inspired is now
+documented as `.claude/skills/` pointers alone.
 
 ## D12 — Learned rules are instance-owned; rejection memory is derived, not carried
 
