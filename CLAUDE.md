@@ -197,6 +197,11 @@ write; it does not remove the lease, the linter, the push rules, or the prefixes
    vocabulary and the classification rule amendments (they override the taxonomy).
 2. Grep by tag and keywords across type folders.
 3. Trust order: `status: evergreen` > `curated` > `raw`.
+4. When two notes you retrieved contradict each other, never silently pick a side:
+   answer by the trust order, say in the answer which notes disagree and which one you
+   followed, and record the conflict back to `_inbox/` so the loop resolves it. The full
+   duty — what the report contains and how it is committed — is in
+   `.claude/skills/kb-search/SKILL.md`; reading is where contradictions get found.
 
 ---
 

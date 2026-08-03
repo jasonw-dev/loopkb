@@ -9,11 +9,14 @@ Search the team knowledge base before re-deriving a solution from scratch.
 
 ## Locate the vault
 
-Same resolution as kb-save: the `KB_VAULT` line in your loaded context (imported
-from the per-user file); else glob `~/.claude/*.md` for a `KB_VAULT:` line before
-asking anything — `kb-setup` may have written one this repo does not import; else
-ask once and offer to create that file — or run `kb-setup <vault url>`, which is
-what normally creates it.
+Same resolution as kb-save, in the same order:
+
+0. If the current repo IS a loopkb vault (it contains `_meta/loop.md`), use it directly.
+1. The `KB_VAULT` line already in your loaded context (imported from the per-user file).
+2. The disk, before asking: glob `~/.claude/*.md` for a `KB_VAULT:` line — `kb-setup` may
+   have written one this repo does not import.
+3. Ask once and offer to create that file — or run `kb-setup <vault url>`, which is what
+   normally creates it.
 If the vault clone is missing or stale, `git -C <vault> pull --rebase` first (skip on network failure — search the local copy).
 
 ## Steps
