@@ -422,17 +422,23 @@ instantiated, plus the files you own. Resolving them is mechanical rather than a
 judgement call — framework files take upstream, instance-owned files keep yours:
 
 ```bash
-git checkout --theirs -- .                           # framework files: upstream wins
-git checkout --ours  -- README.md _meta/instance.md  # yours: README + instance config
+git checkout --theirs -- .                            # framework files: upstream wins
+git checkout --ours  -- README.md _meta/instance.md \
+                        _meta/digest.md               # yours: README, config, last report
 git add -A
 git commit
 ```
 
+`_meta/digest.md` is on the `--ours` line for the same reason `README.md` is: the
+template ships it saying "No runs yet.", and yours is your last run's report — the one
+`scripts/verify_digest.py` checks your recent risky actions against. Framework-managed,
+but the *content* is your vault's.
+
 **Nothing your vault has learned is at risk here.** `git checkout --theirs -- .` replaces
 `_meta/taxonomy.md` with upstream's copy, and that is safe because the loop never writes
 that file: every classification rule the reflect stage learns is a dated entry under
-`_meta/instance.md` → "Classification rule amendments", which the line below keeps. The
-framework owns the rule *format*; your instance owns the rules it learned.
+`_meta/instance.md` → "Classification rule amendments", which the `--ours` line above
+keeps. The framework owns the rule *format*; your instance owns the rules it learned.
 
 Two caveats on that recipe. If upstream restructured the `_meta/instance.md` skeleton,
 `--ours` keeps your values and you adopt the new sections by hand before committing. And

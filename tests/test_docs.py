@@ -65,10 +65,14 @@ class DocsTest(unittest.TestCase):
         self.assertIn("<title>", page.read_text(encoding="utf-8"))
 
     def test_nothing_references_the_old_explainer_path(self) -> None:
+        # errors="ignore": this runs in every instance's CI, where a file with one of
+        # these suffixes may not be UTF-8. A stale path is what is under test; an
+        # instance's encoding is not, and a decode error here would fail their CI.
         offenders = [
             str(path.relative_to(REPO_ROOT))
             for path in text_files()
-            if path.name != Path(__file__).name and OLD_PAGE in path.read_text(encoding="utf-8")
+            if path.name != Path(__file__).name
+            and OLD_PAGE in path.read_text(encoding="utf-8", errors="ignore")
         ]
         self.assertEqual(offenders, [], f"stale reference to docs/{OLD_PAGE}")
 
