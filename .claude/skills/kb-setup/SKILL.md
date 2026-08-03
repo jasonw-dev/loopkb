@@ -7,6 +7,23 @@ description: Use when asked to set up or join a loopkb vault — "kb-setup <git 
 
 Make this machine ready to use a loopkb vault. One pass, no retry loops.
 
+## 0. Are we already in the vault?
+
+If the current repo contains `_meta/loop.md`, it **is** a loopkb vault: there is no URL
+to ask for and nothing to clone. Take `<dest>` = this repo's root and skip straight to
+step 5 (Validate) — steps 1–4 are for joining a vault from outside. Opening a vault clone
+and saying `kb-setup` is the common way to land here, and every vault carries the entry
+points that route to this file, so expect this branch often.
+
+Derive `<vault-name>` from the repo rather than from a URL:
+
+```
+git remote get-url origin        # basename, with any trailing `.git` removed
+```
+
+`git@host:team/team-kb.git` → `team-kb`. No `origin` remote (a solo vault that never
+pushes) → the vault directory's own basename.
+
 ## 1. Input
 
 Take the vault's git URL from the request. If none was given, ask for it and wait —
