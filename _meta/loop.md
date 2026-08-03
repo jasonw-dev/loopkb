@@ -290,6 +290,14 @@ MRs and no branch hygiene there — every action is a commit on `main`.
   from earlier runs.
 - **Hygiene**: delete `kb-loop/*` branches (local and remote) once their MR is merged
   or closed. A branch surviving its MR is a lie about what is pending.
+- **Merge strategy — a prerequisite of this mode**: MRs must land as **merge commits**.
+  `scripts/verify_digest.py` skips merge commits because a merge *is* the human review;
+  squash-merge and rebase-merge instead put a single-parent `[kb-loop]` commit on `main`'s
+  first-parent chain, which the verifier cannot tell from an action that bypassed the MR
+  channel — so it reports human-approved work as missing from the digest. There is no
+  detection for this and none is planned: set the project's merge method to "merge commit"
+  before choosing `reviewed`, or accept that every squashed MR must be itemized in the
+  digest exactly like a direct commit.
 
 ## Mechanics clarifications
 

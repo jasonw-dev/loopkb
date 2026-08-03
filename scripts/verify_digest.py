@@ -42,6 +42,18 @@ for", not as "the digest is complete".
 Merge commits are skipped: in `reviewed` mode agent work reaches `main` through a
 human-approved merge, which is a review, not an unreported action.
 
+Reviewed-mode prerequisite — MRs must land as merge commits. That skip is how a
+reviewed action is recognised, so it is also the mode's one requirement on the
+platform: configure `kb-loop/*` MRs to merge with a merge commit. Squash-merge and
+rebase-merge produce a single-parent commit on `main`'s first-parent chain that
+still carries the `[kb-loop]` prefix, and nothing in that commit distinguishes
+human-approved work from an action that bypassed review — so this script reports
+it as missing from the digest. That is a known limitation, documented rather than
+detected: no heuristic separates a squashed MR from a direct commit, and guessing
+would silence the tripwire this verifier exists to be. An instance that cannot
+change its merge method must itemize squashed MRs in the digest exactly as if they
+were direct commits.
+
 Reviewed-mode note: in `reviewed` mode a risky agent commit should not sit on the
 first-parent chain of `main` at all — it belongs on a `kb-loop/*` branch behind an
 MR. This verifier flagging one there is therefore correct behaviour and a useful
